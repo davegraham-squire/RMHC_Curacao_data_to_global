@@ -24,34 +24,7 @@ output:
 
 # Documentation (README)
 
-This file creates the raw .csv export and codebook of the main (i.e. non-Curacao) study data that we send to globa.l
 
-Input:
-
-* mdta_02w_v2024-09-24.rds
-* "Variables to send to global...".xlsx with the fields to include  
-* the "skeleton file" ../skel/char_child_par_fix_v16.xlsx, with the labels
-* A google spreadsheet "Changes needed to LFF quant data to Global", with the manual changes to the data
-
-Key Options:
-
-* None  
-
-Code Overview:
-
-* Load the data from mdta...rds, extract desired variables from "Variables to send to global".xls
-* Make any adjustments to the underlying data (only step in this program is to aggregate languages if fewer than 5 per site)
-* Create an intitial codebook using the vt() function. If value labels are missing, read them in from the "skel" file. 
-** This is particularly helpful for the checkbox fields
-* Create a mirror data set with the factors as numeric. This is what we will export.
-* Gather the value labels of the original factors. Run vt() on the numeric mirror data set to get values combine that information to get the data description for factor variables.
-* Gather the field levels from the character variables.
-* Import Manual fixes from Google sheets
-* Clean up the code book and export it, and the data as .csv, .rds, .sav
-
-Output:
-* code book
-* the data as .csv, .rds and .sav files
 
 
 # Setup
@@ -60,20 +33,18 @@ Output:
 # FILE PATHS AND PARAMETERS
 rm(list=ls())
 #lff1_raw_data_path="//ars-data-01.sde.net.ucsf.edu/MyResearchShared/LFranck_shared/RMHC/Data/mdta_02_v2024-09-24.rds"
-lff1_raw_data_path="C:/ucsf/mdta_02_v2024-09-24.rds"
-skeleton_file_w_variable_labels="char_child_par_fix_v16.xlsx"
-#vars_to_send_to_global="Variables to send to global.xlsx"
-vars_to_send_to_global="Variables to send to global - 18mar2025 10pm.xlsx"
-google_sheet_of_manual_fixes="https://docs.google.com/spreadsheets/d/18Sl4ki7Sw7MB1rWnB1ZDFooTT99HAfyPKhHVHAyoJV0/edit?gid=1329229673#gid=1329229673"
+curacao_raw_data_path="C:/ucsf/mdta_02_v2024-10-01.rds"
+skeleton_file_w_variable_labels="char_child_par_fix_v10.xlsx"
+vars_to_send_to_global="Curacao site report variables - draft.xlsx"
+google_sheet_of_manual_fixes="https://docs.google.com/spreadsheets/d/1hZbY7s4rgeUhK36COWRj0qd6yXuUkonGrk_OReMRHGY/edit?gid=0#gid=0"
 sheet_tab_of_manual_fixes="Manual_Fixes"
-codebook_output_path="LFF1_global_codebook.csv"
-csv_data_output_path="LFF1_global_data.csv"
+codebook_output_path="LFF1_curacao_codebook.csv"
+csv_data_output_path="LFF1_curacao_data.csv"
 
 # LOAD PACKAGES. INSTALL IF NEEDED
 if(!require("pacman")) {install.packages("pacman");library(pacman)}
 pacman::p_load(tidyr,vtable,rio,readxl,writexl, sjlabelled,Hmisc,viscomplexr,lares,
-               forstringr,googlesheets4,tibble, forcats)
-
+               forstringr,googlesheets4,tibble, forcats,berryFunctions)
 ```
 
 
@@ -84,11 +55,13 @@ pacman::p_load(tidyr,vtable,rio,readxl,writexl, sjlabelled,Hmisc,viscomplexr,lar
 # THANKS MIKE!
 
 # data
-mdta <- readRDS(lff1_raw_data_path)
+mdta <- readRDS(curacao_raw_data_path)
 
 # Variables to send to Global: only the s1 vars listed. have to check for s2 & s3
-globalvars <- import(vars_to_send_to_global)
-gvars <- globalvars$variable
+# globalvars <- import(vars_to_send_to_global)
+# gvars <- globalvars$variable
+globalvars <- import(vars_to_send_to_global, skip=5)
+gvars <- unique(globalvars$variable)
 
 ## Checking for s2 & s3 variables
 # separate out the variables without a round prefix
@@ -129,12 +102,12 @@ globdata <-mdta %>% dplyr::select(any_of(allpos))
 ```{r aggregate_langs}
 # SHOW LANGUAGE DISTRIBUTION, BEFORE TURNING LESS FREQ LANGS TO OTHER
 before= globdata |> 
-  dplyr::group_by(site,en_survlang) |>
+  dplyr::group_by(site,en_survlang.factor) |>
   dplyr::tally() |>
-  spread(en_survlang,n)
+  spread(en_survlang.factor,n)
 print(n=15,before)
 
-for (var in c("en_survlang","dc_survlang","pd_survlang")) {
+for (var in c("en_survlang.factor","dc_survlang.factor","pd_survlang.factor")) {
   for (house in unique(globdata$site)) {
     few_speakers = globdata |>
       dplyr::filter(site==house) |>
@@ -150,9 +123,9 @@ globdata[globdata$site==house & globdata[,var] %in% langs_to_code_as_other,var]=
 }
 
 after= globdata |> 
-  dplyr::group_by(site,en_survlang) |>
+  dplyr::group_by(site,en_survlang.factor) |>
   dplyr::tally() |>
-  spread(en_survlang,n)
+  spread(en_survlang.factor,n)
 print(n=15,after)
 ```
 
@@ -170,22 +143,13 @@ these_vars_need_label = codebook |>
 
 for(var in these_vars_need_label$Name){
   lab = xtra_labels |> dplyr::filter(variable==var) |> dplyr::pull(question)
-  if(length(lab)>1) lab=lab[1]
-  eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- lab")))
+  if(length(lab)>1) {
+    lab=lab[1]
+    if(!berryFunctions::is.error(eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- lab"))))) {
+      eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- lab")))
+      }
+  }
 }
-
-
-# # POSSIBLE UPGRADE: JUST USE VARIABLE LABELS FROM SKEL, IF THEY EXIST. ADD HERE
-# # THEN HAVE 255 THAT STILL NEED A LABEL
-# # BUT THIS LEAD TO CRASHING LATE ON. WEIRD
-# #for(var in codebook$Name){
-# for(var in these_vars_need_label$Name){
-#   lab = xtra_labels |> dplyr::filter(variable==var) |> dplyr::pull(question)
-#   if(length(lab)>1){
-#     lab=lab[1]
-#     eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- lab")))
-#     }
-# }
 
 #ONLY THE FIRST CHECKBOXES ARE LABELED. ADD LABELS TO THE OTHERS
 #IF NO LABEL, BUT NAME HAS SAME PREFIX AS PREVIOUS VAR, USE LABEL OF PREVIOUS VAR
