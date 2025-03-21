@@ -1,0 +1,392 @@
+---
+title: "Main Data to Global - `r date()`"
+author: "Mike and Dave"
+output:
+  rmdformats::readthedown:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    highlight: tango
+    fig_caption: true
+    fig_width: 9
+    fig_height: 6
+    toc_depth: 3
+  html_document:
+    code_folding: hide
+    fig_width: 6
+    fig_height: 6
+    toc: truef
+    fig_caption: true
+  params:
+
+---
+
+# Documentation (README)
+
+This file creates the raw .csv export and codebook of the main (i.e. non-Curacao) study data that we send to globa.l
+
+Input:
+
+* mdta_02w_v2024-09-24.rds
+* "Variables to send to global...".xlsx with the fields to include  
+* the "skeleton file" ../skel/char_child_par_fix_v16.xlsx, with the labels
+* A google spreadsheet "Changes needed to LFF quant data to Global", with the manual changes to the data
+
+Key Options:
+
+* None  
+
+Code Overview:
+
+* Load the data from mdta...rds, extract desired variables from "Variables to send to global".xls
+* Make any adjustments to the underlying data (only step in this program is to aggregate languages if fewer than 5 per site)
+* Create an intitial codebook using the vt() function. If value labels are missing, read them in from the "skel" file. 
+** This is particularly helpful for the checkbox fields
+* Create a mirror data set with the factors as numeric. This is what we will export.
+* Gather the value labels of the original factors. Run vt() on the numeric mirror data set to get values combine that information to get the data description for factor variables.
+* Gather the field levels from the character variables.
+* Import Manual fixes from Google sheets
+* Clean up the code book and export it, and the data as .csv, .rds, .sav
+
+Output:
+* code book
+* the data as .csv, .rds and .sav files
+
+
+# Setup
+
+```{r Setup, warning=FALSE}
+# FILE PATHS AND PARAMETERS
+rm(list=ls())
+#lff1_raw_data_path="//ars-data-01.sde.net.ucsf.edu/MyResearchShared/LFranck_shared/RMHC/Data/mdta_02_v2024-09-24.rds"
+lff1_raw_data_path="C:/ucsf/mdta_02_v2024-09-24.rds"
+skeleton_file_w_variable_labels="char_child_par_fix_v16.xlsx"
+#vars_to_send_to_global="Variables to send to global.xlsx"
+vars_to_send_to_global="Variables to send to global - 18mar2025 10pm.xlsx"
+google_sheet_of_manual_fixes="https://docs.google.com/spreadsheets/d/18Sl4ki7Sw7MB1rWnB1ZDFooTT99HAfyPKhHVHAyoJV0/edit?gid=1329229673#gid=1329229673"
+sheet_tab_of_manual_fixes="Manual_Fixes"
+codebook_output_path="LFF1_global_codebook.csv"
+csv_data_output_path="LFF1_global_data.csv"
+
+# LOAD PACKAGES. INSTALL IF NEEDED
+if(!require("pacman")) {install.packages("pacman");library(pacman)}
+pacman::p_load(tidyr,vtable,rio,readxl,writexl, sjlabelled,Hmisc,viscomplexr,lares,
+               forstringr,googlesheets4,tibble, forcats)
+
+```
+
+
+## Load data
+
+```{r data_prep}
+# MIKE'S CODE TO CREATE DB FOR GLOBAL
+# THANKS MIKE!
+
+# data
+mdta <- readRDS(lff1_raw_data_path)
+
+# Variables to send to Global: only the s1 vars listed. have to check for s2 & s3
+globalvars <- import(vars_to_send_to_global)
+gvars <- globalvars$variable
+
+## Checking for s2 & s3 variables
+# separate out the variables without a round prefix
+noprefix <- c("site","region2", "los")
+include <- gvars[-which(gvars %in% noprefix)]
+
+# just take the root of all the variables and then prefix the rounds
+# DGS NOTE: depanx(3 times), housing3.factor (twice) and survlang (3 times)
+# ALL APPEAR MORE THAN ONE.DO A UNIQUE
+root <- substr(include, 4, nchar(include))
+unique_root=unique(root)
+
+# all possibilities of variable names to check for
+allpos <- c(paste0("en_", unique_root), paste0("dc_", unique_root), paste0("pd_", unique_root))
+
+# add back in the variables with no round prefix
+allpos <- c(noprefix, allpos)
+```
+
+# Swap out if there is a factor version
+Currently not evaluating this code. It's a good idea, as there are 58 variables with factor equivalents, but it ended up leading to the program crashing, and I couldn't find the tiem to figure out why.
+```{r replace_if_factor_var_equivalent, eval=FALSE}
+allpos_w_factor_equivalents=allpos
+for(i in 1:length(allpos)){
+  factor_name=paste0(allpos[i],".factor")
+  allpos_w_factor_equivalents[i]=ifelse(factor_name %in% names(mdta),factor_name,allpos[i])
+}
+```
+
+# Subset to vars
+```{r use_these_vars}
+# get all variables in allpos which are actual variables in mdta
+#globdata <-mdta %>% dplyr::select(any_of(allpos_w_factor_equivalents))
+globdata <-mdta %>% dplyr::select(any_of(allpos))
+```
+
+# Aggregate langs if 5 or fewer at a site
+```{r aggregate_langs}
+# SHOW LANGUAGE DISTRIBUTION, BEFORE TURNING LESS FREQ LANGS TO OTHER
+before= globdata |> 
+  dplyr::group_by(site,en_survlang) |>
+  dplyr::tally() |>
+  spread(en_survlang,n)
+print(n=15,before)
+
+for (var in c("en_survlang","dc_survlang","pd_survlang")) {
+  for (house in unique(globdata$site)) {
+    few_speakers = globdata |>
+      dplyr::filter(site==house) |>
+      dplyr::group_by(!!rlang::sym(var)) |>
+      dplyr::tally() |>
+      dplyr::filter(n<=6) |>
+      dplyr::select(-n)
+
+langs_to_code_as_other=as.character(few_speakers)
+
+globdata[globdata$site==house & globdata[,var] %in% langs_to_code_as_other,var]="ot"
+  }
+}
+
+after= globdata |> 
+  dplyr::group_by(site,en_survlang) |>
+  dplyr::tally() |>
+  spread(en_survlang,n)
+print(n=15,after)
+```
+
+
+# Initialize codebook
+```{r initiate_codebook}
+#INITIAL CODEBOOK, WITH SOME HOLES TO FILL
+codebook=vt(globdata, factor.limit=0, out="return")
+
+#IDENTIFY UNLABELED VARIABLES, USE LABELS FROM THE SKELETON SPREADSHEET
+xtra_labels=read_excel(skeleton_file_w_variable_labels,sheet="Sheet 1")
+these_vars_need_label = codebook |> 
+  dplyr::filter(Label=="NULL") |> 
+  dplyr::select(Name)
+
+for(var in these_vars_need_label$Name){
+  lab = xtra_labels |> dplyr::filter(variable==var) |> dplyr::pull(question)
+  if(length(lab)>1) lab=lab[1]
+  eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- lab")))
+}
+
+
+# # POSSIBLE UPGRADE: JUST USE VARIABLE LABELS FROM SKEL, IF THEY EXIST. ADD HERE
+# # THEN HAVE 255 THAT STILL NEED A LABEL
+# # BUT THIS LEAD TO CRASHING LATE ON. WEIRD
+# #for(var in codebook$Name){
+# for(var in these_vars_need_label$Name){
+#   lab = xtra_labels |> dplyr::filter(variable==var) |> dplyr::pull(question)
+#   if(length(lab)>1){
+#     lab=lab[1]
+#     eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- lab")))
+#     }
+# }
+
+#ONLY THE FIRST CHECKBOXES ARE LABELED. ADD LABELS TO THE OTHERS
+#IF NO LABEL, BUT NAME HAS SAME PREFIX AS PREVIOUS VAR, USE LABEL OF PREVIOUS VAR
+codebook=vt(globdata, factor.limit=0, out="return")
+for (i in 2:nrow(codebook)) {
+  if(substr(codebook[i,"Name"],1,6)==substr(codebook[i-1,"Name"],1,6) & is.na(codebook[i,"Label"])) {
+    add_this_label=codebook[i-1,"Label"]
+    var=codebook[i,"Name"]
+    #CHANGE IN globdata AND IN codebook, THE CODEBOOK
+    eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- add_this_label")))
+    codebook[i,"Label"]=add_this_label
+  }
+}
+
+#FOR CHECKBOXES WE HAVE HAVE THE QUESTION, BUT NEED TO ADD THE CORRESPONDING  
+#ANSWER WHICH IS IN skeleton_file_w_variable_labels. FIRST RERUN CODEBOOK
+codebook=vt(globdata, factor.limit=0, out="return")
+for (i in 1:nrow(codebook)) {
+  var=codebook[i,"Name"]
+  if(grepl('___',var)) {
+    answer = xtra_labels |> dplyr::filter(variable==var) |> dplyr::pull(level_label)
+    add_this_label=paste0(codebook[i,"Label"]," ",answer)
+    #CHANGE IN globdata AND IN codebook, THE CODEBOOK
+    eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- add_this_label")))
+  }
+}
+codebook=vt(globdata, factor.limit=0, out="return")
+
+# WE ARE STILL MISSING THE VARIABLE LABEL FOR dc_hrsathosp.r. FILL THIS IN
+these_vars_still_need_label = codebook |> 
+  dplyr::filter(is.na(Label)) |> 
+  dplyr::select(Name)
+
+for(var in these_vars_still_need_label$Name){
+  lab = xtra_labels |> dplyr::filter(variable==var) |> dplyr::pull(variable_label)
+  if(length(lab)>1) lab=lab[1]
+  eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- lab")))
+}
+
+#WE HAVE THE VARIABLE LABELS! MAYBE NOT THE VALUE LABELS
+#FOR CLARITY, CREATE A COLUMN W/ THE DATA TYPE
+codebook=vt(globdata, factor.limit=0, out="return")
+codebook$Type=""
+for (i in 1:nrow(codebook)){
+  var=codebook[i,"Name"]
+  var_type=class(globdata[,var])[2]
+  codebook[i,"Type"]=var_type
+}
+```
+
+
+# Code output data as numeric
+```{r coding_factors}
+globdata_w_factor_as_numeric=globdata
+
+# TRUST ME IT WILL BE EASIER IF SITES DON'T HAVE CODES
+codebook$Type [1]="Character"
+
+vars_w_factor_in_name=codebook$Name[codebook$Type=="factor"]
+for(var in vars_w_factor_in_name) {
+  globdata_w_factor_as_numeric[,var]=as.numeric(globdata_w_factor_as_numeric[,var])
+}
+
+# CREATE A CODEBOOK W NUMERIC FACTORS, TO PULL THOSE NUMERIC VALUES, 
+# THEN ADD THIS TO THE CODEBOOK
+codebook_w_numeric=vt(globdata_w_factor_as_numeric, factor.limit=0, out="return")
+
+codebook=codebook |>
+  dplyr::select(-Class) |>
+  dplyr::rename(Orig_Values=Values) |>
+  dplyr::relocate(Type,.after = Name)
+
+codebook=cbind(codebook,Values_After_Fac2Num=codebook_w_numeric$Values)
+
+char_array_to_txt <- function(char_array) {
+  concatenated_str_vec=vector2String(char_array)
+  return(substr(concatenated_str_vec,3,nchar(concatenated_str_vec)-1))
+}
+
+#CREATE A FINAL COLUMN COMBINING THE NUMERIC FACTORS WITH THEIR LEVELS
+codebook$Factor_levels=""
+codebook$Data_Range=""
+for (i in 1:nrow(codebook)){
+  var=codebook[i,"Name"]
+  if(codebook[i,"Type"]=="factor") {
+  #if(grepl("factor",var)) {
+    fac_levels=levels(globdata[,var])
+    codebook[i,"Factor_levels"]=char_array_to_txt(fac_levels)
+    codebook[i,"Data_Range"]=paste0(codebook[i,"Values_After_Fac2Num"],", corresponding to: ",codebook[i,"Factor_levels"])
+  } else {
+    codebook[i,"Data_Range"]=codebook[i,"Orig_Values"]
+  }
+}
+```
+
+
+# Character variables
+```{r character_vars}
+character_vars_wo_description=codebook |>
+  dplyr::filter(Type=="character", Data_Range=="") |>
+  dplyr::select(Name,Data_Range)
+
+for(var in character_vars_wo_description$Name){
+  var_cats=names(table(mdta[,var]))
+  codebook[codebook$Name==var,"Data_Range"]= paste(var_cats,collapse = ", ")  
+}
+```
+
+# Use value labels if there is a factor version
+```{r check_if_factor_equivalents}
+codebook$factor_equivalent
+for(var in codebook$Name){
+  factor_name=paste0(var,".factor")
+  codebook[codebook$Name==var,"factor_equivalent"]=ifelse(factor_name %in% names(mdta),factor_name,NA)
+}
+
+codebook$factor_equivalent_levels=""
+for (i in 1:nrow(codebook)){
+  if(codebook[i,"Type"] %in% c("numeric","integer") & !is.na(codebook[i,"factor_equivalent"])){
+    var_factor_equivalent=codebook[i,"factor_equivalent"]
+    fac_levels=levels(mdta[,var_factor_equivalent])
+    codebook[i,"factor_equivalent_levels"]=char_array_to_txt(fac_levels)
+    codebook[i,"Data_Range"]=paste0(codebook[i,"Data_Range"],
+                                          ", corresponding to: ", codebook[i,"factor_equivalent_levels"])
+  }
+}
+
+```
+# Manual fixes in Google Sheets
+```{r google_sheet_manual_fixes, echo=FALSE, include=FALSE}
+#Read google sheets data into R
+manual_fixes <- read_sheet(google_sheet_of_manual_fixes,sheet=sheet_tab_of_manual_fixes)
+
+for (i in 1:nrow(manual_fixes)) {
+  var=manual_fixes[i,"Variable_Name"][[1]]
+  if(!is.na(manual_fixes$New_Survey_Item[i])) {
+    codebook[codebook$Name==var,"Label"]=manual_fixes[i,"New_Survey_Item"]
+  }
+    if(!is.na(manual_fixes$New_Data_Range[i])) {
+    codebook[codebook$Name==var,"Data_Range"]=manual_fixes[i,"New_Data_Range"]
+  }
+}
+
+```
+
+
+# Clean up before exprot
+```{r clean_up_before_export}
+
+# THE ROW ORDER HAS GOTTEN SCREWY. RESTORE IT AND ONLY SAVE COLUMNS NEEEDED
+codebook$row_num=row.names(codebook)
+
+#JUST THE 4 COLUMNS. CLEAN UP THE NAMES? VARIABLE, TYPE, SURVEY ITEM, DATA INFORMATION
+codebook=codebook |>
+  dplyr::select(Name,Type,Label,Data_Range) |>
+  dplyr::rename('Variable Name'=Name,'Data Type'=Type,'Survey Question/Item'=Label,
+                'Variable Description'=Data_Range) 
+
+# CHANGE LABELS FOR DATA TYPE
+codebook$`Data Type`[codebook$`Data Type`=="Character"]="Character Field"
+codebook$`Data Type`[codebook$`Data Type`=="character"]="Character Field"
+codebook$`Data Type`[codebook$`Data Type`=="factor"]="Coded Category"
+codebook$`Data Type`[codebook$`Data Type`=="numeric"]="Continuous Numeric"
+codebook$`Data Type`[codebook$`Data Type`=="integer"]="Integer Numeric"
+```
+
+# Output data and codebook
+```{r output}
+write.csv(globdata_w_factor_as_numeric,file=csv_data_output_path, row.names=F, na="")
+write.csv(codebook, file=codebook_output_path, row.names=F)
+#BECAUSE WE HAVE VARIABLES WITH "." IN THE NAMES, CAN'T WRITE AS .dta
+#haven::write_dta(globdata, path=paste0(substr(codebook_output_path,1,nchar(codebook_output_path)-3),"dta"))
+saveRDS(globdata, file=paste0(substr(codebook_output_path,1,nchar(codebook_output_path)-3),"rds"))
+haven::write_sav(globdata, path=paste0(substr(codebook_output_path,1,nchar(codebook_output_path)-3),"sav"))
+```
+
+# Investigate a couple of variables
+```{r check_a_few_vars, eval=FALSE}
+country= mdta |> 
+  dplyr::group_by(en_countryc.factor,en_countryc) |>
+  dplyr::tally() |>
+  spread(en_countryc,n)
+print(n=15,country)
+
+needs= mdta |> 
+  dplyr::mutate(
+    en_unmetneeds=fct_recode(en_needs_unmet.factor,
+                             "Unmet needs at EN" = "Checked",
+                             "No unmet needs at EN" = "Unchecked"),
+    pd_unmetneeds=fct_recode(pd_needs_unmet.factor,
+                             "Unmet needs at PD" = "Checked",
+                             "No unmet needs at PD" = "Unchecked")
+  ) |>
+  dplyr::group_by(en_unmetneeds,pd_unmetneeds) |>
+  dplyr::tally() |>
+  spread(en_unmetneeds,n)
+gt_1=gt::gt(needs)
+gt_1
+gt_2=gt::rm_stubhead(data=gt_1)
+gt_2
+
+```
+
+
