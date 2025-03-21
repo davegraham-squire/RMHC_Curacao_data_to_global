@@ -1,6 +1,6 @@
 # RMHC_Curacao_data_to_global
 
-This file creates the raw .csv export and codebook of the main (i.e. non-Curacao) study data that we send to globa.l
+This file creates the raw .csv export and codebook of the Curacao data that we send to global
 
 Input:
 
