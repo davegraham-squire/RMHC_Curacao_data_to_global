@@ -1,5 +1,5 @@
 ---
-title: "Main Data to Global - `r date()`"
+title: "Curacao Data to Global - `r date()`"
 author: "Mike and Dave"
 output:
   rmdformats::readthedown:
@@ -35,7 +35,7 @@ rm(list=ls())
 #lff1_raw_data_path="//ars-data-01.sde.net.ucsf.edu/MyResearchShared/LFranck_shared/RMHC/Data/mdta_02_v2024-09-24.rds"
 curacao_raw_data_path="C:/ucsf/mdta_02_v2024-10-01.rds"
 skeleton_file_w_variable_labels="char_child_par_fix_v10.xlsx"
-vars_to_send_to_global="Curacao site report variables - draft.xlsx"
+vars_to_send_to_global="Variables to include in global and site reports_Curacao_20250321.xlsx"
 google_sheet_of_manual_fixes="https://docs.google.com/spreadsheets/d/1hZbY7s4rgeUhK36COWRj0qd6yXuUkonGrk_OReMRHGY/edit?gid=0#gid=0"
 sheet_tab_of_manual_fixes="Manual_Fixes"
 codebook_output_path="LFF1_curacao_codebook.csv"
@@ -60,8 +60,8 @@ mdta <- readRDS(curacao_raw_data_path)
 # Variables to send to Global: only the s1 vars listed. have to check for s2 & s3
 # globalvars <- import(vars_to_send_to_global)
 # gvars <- globalvars$variable
-globalvars <- import(vars_to_send_to_global, skip=5)
-gvars <- unique(globalvars$variable)
+globalvars <- import(vars_to_send_to_global)
+gvars <- unique(globalvars$`Variable Name`)
 
 ## Checking for s2 & s3 variables
 # separate out the variables without a round prefix
@@ -82,7 +82,7 @@ allpos <- c(noprefix, allpos)
 ```
 
 # Swap out if there is a factor version
-Currently not evaluating this code. It's a good idea, as there are 58 variables with factor equivalents, but it ended up leading to the program crashing, and I couldn't find the tiem to figure out why.
+Currently not evaluating this code. It's a good idea, as there are many variables with factor equivalents, but it ended up leading to the program crashing, and I couldn't find the tiem to figure out why.
 ```{r replace_if_factor_var_equivalent, eval=FALSE}
 allpos_w_factor_equivalents=allpos
 for(i in 1:length(allpos)){
@@ -134,6 +134,8 @@ print(n=15,after)
 ```{r initiate_codebook}
 #INITIAL CODEBOOK, WITH SOME HOLES TO FILL
 codebook=vt(globdata, factor.limit=0, out="return")
+num_need_label=length(codebook$Label[codebook$Label=="NULL"])
+print(paste0("Number of vars that still need a label: ",num_need_label))
 
 #IDENTIFY UNLABELED VARIABLES, USE LABELS FROM THE SKELETON SPREADSHEET
 xtra_labels=read_excel(skeleton_file_w_variable_labels,sheet="Sheet 1")
@@ -145,15 +147,21 @@ for(var in these_vars_need_label$Name){
   lab = xtra_labels |> dplyr::filter(variable==var) |> dplyr::pull(question)
   if(length(lab)>1) {
     lab=lab[1]
-    if(!berryFunctions::is.error(eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- lab"))))) {
+  }
+  if(!berryFunctions::is.error(eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- lab"))))) {
       eval(parse(text=paste0("Hmisc::label(globdata$",var,") <- lab")))
-      }
   }
 }
 
+# REDO THE CODEBOOK W/ THE NEW LABELS
+codebook=vt(globdata, factor.limit=0, out="return")
+num_need_label=length(codebook$Label[codebook$Label=="NULL"])
+print(paste0("Number of vars that still need a label: ",num_need_label))
+```
+
+```{r include_checkboxes}
 #ONLY THE FIRST CHECKBOXES ARE LABELED. ADD LABELS TO THE OTHERS
 #IF NO LABEL, BUT NAME HAS SAME PREFIX AS PREVIOUS VAR, USE LABEL OF PREVIOUS VAR
-codebook=vt(globdata, factor.limit=0, out="return")
 for (i in 2:nrow(codebook)) {
   if(substr(codebook[i,"Name"],1,6)==substr(codebook[i-1,"Name"],1,6) & is.na(codebook[i,"Label"])) {
     add_this_label=codebook[i-1,"Label"]
@@ -178,7 +186,7 @@ for (i in 1:nrow(codebook)) {
 }
 codebook=vt(globdata, factor.limit=0, out="return")
 
-# WE ARE STILL MISSING THE VARIABLE LABEL FOR dc_hrsathosp.r. FILL THIS IN
+# IF STILL MISSING TRY TO USE variable_label AS THE VARIABLE LABEL
 these_vars_still_need_label = codebook |> 
   dplyr::filter(is.na(Label)) |> 
   dplyr::select(Name)
@@ -192,10 +200,15 @@ for(var in these_vars_still_need_label$Name){
 #WE HAVE THE VARIABLE LABELS! MAYBE NOT THE VALUE LABELS
 #FOR CLARITY, CREATE A COLUMN W/ THE DATA TYPE
 codebook=vt(globdata, factor.limit=0, out="return")
+
 codebook$Type=""
 for (i in 1:nrow(codebook)){
   var=codebook[i,"Name"]
-  var_type=class(globdata[,var])[2]
+  var_class=class(globdata[,var])
+  if (length((var_class))==1) {
+    var_type=var_class[1]
+  } else 
+    var_type=var_class[2]
   codebook[i,"Type"]=var_type
 }
 ```
@@ -326,31 +339,5 @@ saveRDS(globdata, file=paste0(substr(codebook_output_path,1,nchar(codebook_outpu
 haven::write_sav(globdata, path=paste0(substr(codebook_output_path,1,nchar(codebook_output_path)-3),"sav"))
 ```
 
-# Investigate a couple of variables
-```{r check_a_few_vars, eval=FALSE}
-country= mdta |> 
-  dplyr::group_by(en_countryc.factor,en_countryc) |>
-  dplyr::tally() |>
-  spread(en_countryc,n)
-print(n=15,country)
-
-needs= mdta |> 
-  dplyr::mutate(
-    en_unmetneeds=fct_recode(en_needs_unmet.factor,
-                             "Unmet needs at EN" = "Checked",
-                             "No unmet needs at EN" = "Unchecked"),
-    pd_unmetneeds=fct_recode(pd_needs_unmet.factor,
-                             "Unmet needs at PD" = "Checked",
-                             "No unmet needs at PD" = "Unchecked")
-  ) |>
-  dplyr::group_by(en_unmetneeds,pd_unmetneeds) |>
-  dplyr::tally() |>
-  spread(en_unmetneeds,n)
-gt_1=gt::gt(needs)
-gt_1
-gt_2=gt::rm_stubhead(data=gt_1)
-gt_2
-
-```
 
 
