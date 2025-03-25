@@ -37,6 +37,7 @@ curacao_raw_data_path="C:/ucsf/mdta_02_v2024-10-01.rds"
 skeleton_file_w_variable_labels="char_child_par_fix_v10.xlsx"
 vars_to_send_to_global="Variables to include in global and site reports_Curacao_20250321.xlsx"
 google_sheet_of_manual_fixes="https://docs.google.com/spreadsheets/d/1hZbY7s4rgeUhK36COWRj0qd6yXuUkonGrk_OReMRHGY/edit?gid=0#gid=0"
+google_sheet_of_main_manual_fixes="https://docs.google.com/spreadsheets/d/18Sl4ki7Sw7MB1rWnB1ZDFooTT99HAfyPKhHVHAyoJV0/edit?gid=1329229673#gid=1329229673"
 sheet_tab_of_manual_fixes="Manual_Fixes"
 codebook_output_path="LFF1_curacao_codebook.csv"
 csv_data_output_path="LFF1_curacao_data.csv"
@@ -332,6 +333,17 @@ codebook$`Data Type`[codebook$`Data Type`=="factor"]="Coded Category"
 codebook$`Data Type`[codebook$`Data Type`=="numeric"]="Continuous Numeric"
 codebook$`Data Type`[codebook$`Data Type`=="integer"]="Integer Numeric"
 ```
+
+
+```{r compare_to_caryls_fixes}
+caryl_fixes <- read_sheet(google_sheet_of_main_manual_fixes,sheet=sheet_tab_of_manual_fixes)
+
+codebook_and_caryl=dplyr::left_join(codebook,caryl_fixes,by=c("Variable Name"="Variable_Name"))
+write.csv(codebook_and_caryl,file=paste0(substr(codebook_output_path,1,nchar(codebook_output_path)-4),"_and_caryl_main_fixes",".csv")  ,row.names = FALSE)
+```
+
+
+
 
 # Output data and codebook
 ```{r output}
