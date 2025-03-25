@@ -44,7 +44,7 @@ csv_data_output_path="LFF1_curacao_data.csv"
 # LOAD PACKAGES. INSTALL IF NEEDED
 if(!require("pacman")) {install.packages("pacman");library(pacman)}
 pacman::p_load(tidyr,vtable,rio,readxl,writexl, sjlabelled,Hmisc,viscomplexr,lares,
-               forstringr,googlesheets4,tibble, forcats,berryFunctions)
+               forstringr,googlesheets4,tibble, forcats,berryFunctions, stringr)
 ```
 
 
@@ -314,6 +314,10 @@ for (i in 1:nrow(manual_fixes)) {
 
 # THE ROW ORDER HAS GOTTEN SCREWY. RESTORE IT AND ONLY SAVE COLUMNS NEEEDED
 codebook$row_num=row.names(codebook)
+
+# REMOVE THIS Â, "A" WITH A CARROT
+codebook = codebook |>
+  dplyr::mutate(Label=str_replace(Label,"Â","") )
 
 #JUST THE 4 COLUMNS. CLEAN UP THE NAMES? VARIABLE, TYPE, SURVEY ITEM, DATA INFORMATION
 codebook=codebook |>
