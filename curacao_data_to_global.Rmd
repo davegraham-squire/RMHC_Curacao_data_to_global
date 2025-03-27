@@ -108,20 +108,30 @@ before= globdata |>
   spread(en_survlang.factor,n)
 print(n=15,before)
 
-for (var in c("en_survlang.factor","dc_survlang.factor","pd_survlang.factor")) {
-  for (house in unique(globdata$site)) {
-    few_speakers = globdata |>
-      dplyr::filter(site==house) |>
-      dplyr::group_by(!!rlang::sym(var)) |>
-      dplyr::tally() |>
-      dplyr::filter(n<=6) |>
-      dplyr::select(-n)
+# for (var in c("en_survlang.factor","dc_survlang.factor","pd_survlang.factor")) {
+#   for (house in unique(globdata$site)) {
+#     few_speakers = globdata |>
+#       dplyr::filter(site==house) |>
+#       dplyr::group_by(!!rlang::sym(var)) |>
+#       dplyr::tally() |>
+#       dplyr::filter(n<=6) |>
+#       dplyr::select(-n)
+# 
+# langs_to_code_as_other=as.character(few_speakers)
+# 
+# globdata[globdata$site==house & globdata[,var] %in% langs_to_code_as_other,var]="ot"
+#   }
+# }
 
-langs_to_code_as_other=as.character(few_speakers)
-
-globdata[globdata$site==house & globdata[,var] %in% langs_to_code_as_other,var]="ot"
-  }
-}
+globdata = globdata |>
+  dplyr::mutate(en_survlang.factor = fct_recode(en_survlang.factor,"Other"="Español"),
+         dc_survlang.factor = fct_recode(dc_survlang.factor,"Other"="Español"),
+         pd_survlang.factor = fct_recode(pd_survlang.factor,"Other"="Español"),
+         en_homelang.factor = fct_recode(en_homelang.factor,"Other"="Spanish")
+  )
+globdata$en_survlang[globdata$en_survlang=="es"]="ot"
+globdata$dc_survlang[globdata$dc_survlang=="es"]="ot"
+globdata$pd_survlang[globdata$pd_survlang=="es"]="ot"
 
 after= globdata |> 
   dplyr::group_by(site,en_survlang.factor) |>
