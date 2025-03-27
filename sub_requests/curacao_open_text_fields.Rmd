@@ -10,7 +10,7 @@ rm(list=ls())
 knitr::opts_chunk$set(echo = TRUE)
 
 # PATHS. INPUT AND OUTPUT FILE NAMES
-working_directory_path="C:/Users/dave_/OneDrive/Documents/GitHub/RMHC_indiv_data_and_codebook/sub_requests"
+#working_directory_path="C:/Users/dave_/OneDrive/Documents/GitHub/RMHC_indiv_data_and_codebook/sub_requests"
 input_data="mdta_02_v2024-10-01.rds"
 remote_data_path="//ars-data-01.sde.net.ucsf.edu/MyResearchShared/LFranck_shared/RMHC/Data/R data for Dave/Curacao"
 xls_w_open_text="VariablesForGlobalCuracao.xlsx"
@@ -22,7 +22,7 @@ output_file_name="Curacao Open Text Fields.xlsx"
 if(!require("pacman")) {install.packages("pacman");library(pacman)}
 pacman::p_load(tidyr)
                
-setwd(working_directory_path)
+#setwd(working_directory_path)
 
 ```
 
