@@ -1,0 +1,44 @@
+---
+title: "Curacao Open Text"
+author: "Dave"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = TRUE)
+
+# PATHS. INPUT AND OUTPUT FILE NAMES
+working_directory_path="C:/Users/dave_/OneDrive/Documents/GitHub/RMHC_indiv_data_and_codebook/sub_requests"
+input_data="mdta_02_v2024-10-01.rds"
+remote_data_path="//ars-data-01.sde.net.ucsf.edu/MyResearchShared/LFranck_shared/RMHC/Data/R data for Dave/Curacao"
+xls_w_open_text="VariablesForGlobalCuracao.xlsx"
+tab_w_open_text_fields="Qualitative"
+output_file_name="Curacao Open Text Fields.xlsx"
+
+# PACKAGES
+#if(!require("rmdformats")) {install.packages("rmdformats");library(rmdformats)}
+if(!require("pacman")) {install.packages("pacman");library(pacman)}
+pacman::p_load(tidyr)
+               
+setwd(working_directory_path)
+
+```
+
+## LOAD THE DATA
+
+Curacao data is on RAE. Everything else is in the repo, which we set working directly to
+
+```{r read_and_write_data}
+curacao <- readRDS(paste0(remote_data_path,"/",input_data))
+
+xl_w_qual_info = readxl::read_xlsx(xls_w_open_text)
+open_txt_vars=xl_w_qual_info$`Variable / Field Name`
+
+cur_open_txt= curacao |>
+  dplyr::select(all_of(open_txt_vars))
+
+writexl::write_xlsx(cur_open_txt,path = output_file_name)
+```
+
