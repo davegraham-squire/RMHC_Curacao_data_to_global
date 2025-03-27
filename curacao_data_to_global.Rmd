@@ -32,8 +32,8 @@ output:
 ```{r Setup, warning=FALSE}
 # FILE PATHS AND PARAMETERS
 rm(list=ls())
-#lff1_raw_data_path="//ars-data-01.sde.net.ucsf.edu/MyResearchShared/LFranck_shared/RMHC/Data/mdta_02_v2024-09-24.rds"
-curacao_raw_data_path="C:/ucsf/mdta_02_v2024-10-01.rds"
+curacao_raw_data_path="//ars-data-01.sde.net.ucsf.edu/MyResearchShared/LFranck_shared/RMHC/Data/R data for Dave/Curacao/mdta_02_v2024-10-01.rds"
+#curacao_raw_data_path="C:/ucsf/mdta_02_v2024-10-01.rds"
 skeleton_file_w_variable_labels="char_child_par_fix_v10.xlsx"
 vars_to_send_to_global="Variables to include in global and site reports_Curacao_20250321.xlsx"
 google_sheet_of_manual_fixes="https://docs.google.com/spreadsheets/d/1hZbY7s4rgeUhK36COWRj0qd6yXuUkonGrk_OReMRHGY/edit?gid=0#gid=0"
@@ -334,7 +334,7 @@ codebook$`Data Type`[codebook$`Data Type`=="numeric"]="Continuous Numeric"
 codebook$`Data Type`[codebook$`Data Type`=="integer"]="Integer Numeric"
 ```
 
-
+# Incorporate Caryl's codebook
 ```{r compare_to_caryls_fixes}
 caryl_fixes <- read_sheet(google_sheet_of_main_manual_fixes,sheet=sheet_tab_of_manual_fixes)
 
@@ -351,8 +351,8 @@ write.csv(globdata_w_factor_as_numeric,file=csv_data_output_path, row.names=F, n
 write.csv(codebook, file=codebook_output_path, row.names=F)
 #BECAUSE WE HAVE VARIABLES WITH "." IN THE NAMES, CAN'T WRITE AS .dta
 #haven::write_dta(globdata, path=paste0(substr(codebook_output_path,1,nchar(codebook_output_path)-3),"dta"))
-saveRDS(globdata, file=paste0(substr(codebook_output_path,1,nchar(codebook_output_path)-3),"rds"))
-haven::write_sav(globdata, path=paste0(substr(codebook_output_path,1,nchar(codebook_output_path)-3),"sav"))
+saveRDS(globdata, file=paste0(substr(csv_data_output_path,1,nchar(csv_data_output_path)-3),"rds"))
+haven::write_sav(globdata, path=paste0(substr(csv_data_output_path,1,nchar(csv_data_output_path)-3),"sav"))
 ```
 
 
