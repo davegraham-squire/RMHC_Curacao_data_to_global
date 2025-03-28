@@ -168,9 +168,12 @@ before= globdata |>
 print(n=15,before)
 
 globdata = globdata |>
-  dplyr::mutate(en_survlang.factor = fct_recode(en_survlang.factor,"Other"="Español"),
-         dc_survlang.factor = fct_recode(dc_survlang.factor,"Other"="Español"),
-         pd_survlang.factor = fct_recode(pd_survlang.factor,"Other"="Español"),
+    # dplyr::mutate(en_survlang.factor = fct_recode(en_survlang.factor,"Other"="Español"),
+    #      dc_survlang.factor = fct_recode(dc_survlang.factor,"Other"="Español"),
+    #      pd_survlang.factor = fct_recode(pd_survlang.factor,"Other"="Español"),
+  dplyr::mutate(en_survlang.factor = fct_recode(en_survlang.factor,"Other"="Espa�ol"),
+         dc_survlang.factor = fct_recode(dc_survlang.factor,"Other"="Espa�ol"),
+         pd_survlang.factor = fct_recode(pd_survlang.factor,"Other"="Espa�ol"),
          en_homelang.factor = fct_recode(en_homelang.factor,"Other"="Spanish")
   )
 globdata$en_survlang[globdata$en_survlang=="es"]="ot"
