@@ -8,7 +8,7 @@
         <meta name="author" content="Mike and Dave" />
     
     
-    <title>Curacao Data to Global - Mon Mar 24 21:19:16 2025</title>
+    <title>Curacao Data to Global - Thu Mar 27 18:08:02 2025</title>
 
         <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1580,19 +1580,20 @@ margin-left: 0 !important;
          
    
         
-      <h1 class="title">Curacao Data to Global - Mon Mar 24 21:19:16
+      <h1 class="title">Curacao Data to Global - Thu Mar 27 18:08:02
 2025</h1>
       
          <!-- readthedown authors -->
    <div id="sidebar">
-    <h2><a href="#content">Curacao Data to Global - Mon Mar 24 21:19:16
+    <h2><a href="#content">Curacao Data to Global - Thu Mar 27 18:08:02
 2025</a></h2>
     <div id="toc">
       <ul>
       <li><a href="#documentation-readme" id="toc-documentation-readme">Documentation (README)</a></li>
       <li><a href="#setup" id="toc-setup">Setup</a>
       <ul>
-      <li><a href="#load-data" id="toc-load-data">Load data</a></li>
+      <li><a href="#load-data-create-any-new-vars-needed" id="toc-load-data-create-any-new-vars-needed">Load data, create
+      any new vars needed</a></li>
       </ul></li>
       <li><a href="#swap-out-if-there-is-a-factor-version" id="toc-swap-out-if-there-is-a-factor-version">Swap out if there
       is a factor version</a></li>
@@ -1609,6 +1610,8 @@ margin-left: 0 !important;
       <li><a href="#manual-fixes-in-google-sheets" id="toc-manual-fixes-in-google-sheets">Manual fixes in Google
       Sheets</a></li>
       <li><a href="#clean-up-before-exprot" id="toc-clean-up-before-exprot">Clean up before exprot</a></li>
+      <li><a href="#incorporate-caryls-codebook" id="toc-incorporate-caryls-codebook">Incorporate Caryl’s
+      codebook</a></li>
       <li><a href="#output-data-and-codebook" id="toc-output-data-and-codebook">Output data and
       codebook</a></li>
       </ul>
@@ -1632,10 +1635,10 @@ and Dave</p>
 <h1>Setup</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># FILE PATHS AND PARAMETERS</span></span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>())</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#lff1_raw_data_path=&quot;//ars-data-01.sde.net.ucsf.edu/MyResearchShared/LFranck_shared/RMHC/Data/mdta_02_v2024-09-24.rds&quot;</span></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>curacao_raw_data_path<span class="ot">=</span><span class="st">&quot;C:/ucsf/mdta_02_v2024-10-01.rds&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>curacao_raw_data_path<span class="ot">=</span><span class="st">&quot;//ars-data-01.sde.net.ucsf.edu/MyResearchShared/LFranck_shared/RMHC/Data/R data for Dave/Curacao/mdta_02_v2024-10-01.rds&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#curacao_raw_data_path=&quot;C:/ucsf/mdta_02_v2024-10-01.rds&quot;</span></span>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>skeleton_file_w_variable_labels<span class="ot">=</span><span class="st">&quot;char_child_par_fix_v10.xlsx&quot;</span></span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>vars_to_send_to_global<span class="ot">=</span><span class="st">&quot;Variables to include in global and site reports_Curacao_20250321.xlsx&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>vars_to_send_to_global<span class="ot">=</span><span class="st">&quot;Variables to include in global and site reports_Curacao_20250327.xlsx&quot;</span></span>
 <span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>google_sheet_of_manual_fixes<span class="ot">=</span><span class="st">&quot;https://docs.google.com/spreadsheets/d/1hZbY7s4rgeUhK36COWRj0qd6yXuUkonGrk_OReMRHGY/edit?gid=0#gid=0&quot;</span></span>
 <span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>google_sheet_of_main_manual_fixes<span class="ot">=</span><span class="st">&quot;https://docs.google.com/spreadsheets/d/18Sl4ki7Sw7MB1rWnB1ZDFooTT99HAfyPKhHVHAyoJV0/edit?gid=1329229673#gid=1329229673&quot;</span></span>
 <span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>sheet_tab_of_manual_fixes<span class="ot">=</span><span class="st">&quot;Manual_Fixes&quot;</span></span>
@@ -1647,36 +1650,91 @@ and Dave</p>
 <pre><code>## Loading required package: pacman</code></pre>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyr,vtable,rio,readxl,writexl, sjlabelled,Hmisc,viscomplexr,lares,</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>               forstringr,googlesheets4,tibble, forcats,berryFunctions, stringr)</span></code></pre></div>
-<div id="load-data" class="section level2">
-<h2>Load data</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># MIKE&#39;S CODE TO CREATE DB FOR GLOBAL</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co"># THANKS MIKE!</span></span>
+<div id="load-data-create-any-new-vars-needed" class="section level2">
+<h2>Load data, create any new vars needed</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># data</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>mdta <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(curacao_raw_data_path)</span>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># data</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>mdta <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(curacao_raw_data_path)</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co"># Variables to send to Global: only the s1 vars listed. have to check for s2 &amp; s3</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co"># globalvars &lt;- import(vars_to_send_to_global)</span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co"># gvars &lt;- globalvars$variable</span></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>globalvars <span class="ot">&lt;-</span> <span class="fu">import</span>(vars_to_send_to_global)</span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>gvars <span class="ot">&lt;-</span> <span class="fu">unique</span>(globalvars<span class="sc">$</span><span class="st">`</span><span class="at">Variable Name</span><span class="st">`</span>)</span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="do">## Checking for s2 &amp; s3 variables</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co"># separate out the variables without a round prefix</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>noprefix <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;site&quot;</span>,<span class="st">&quot;region2&quot;</span>, <span class="st">&quot;los&quot;</span>)</span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>include <span class="ot">&lt;-</span> gvars[<span class="sc">-</span><span class="fu">which</span>(gvars <span class="sc">%in%</span> noprefix)]</span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a></span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co"># just take the root of all the variables and then prefix the rounds</span></span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co"># DGS </span><span class="al">NOTE</span><span class="co">: depanx(3 times), housing3.factor (twice) and survlang (3 times)</span></span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co"># ALL APPEAR MORE THAN ONE.DO A UNIQUE</span></span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>root <span class="ot">&lt;-</span> <span class="fu">substr</span>(include, <span class="dv">4</span>, <span class="fu">nchar</span>(include))</span>
-<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>unique_root<span class="ot">=</span><span class="fu">unique</span>(root)</span>
-<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a></span>
-<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co"># all possibilities of variable names to check for</span></span>
-<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>allpos <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">paste0</span>(<span class="st">&quot;en_&quot;</span>, unique_root), <span class="fu">paste0</span>(<span class="st">&quot;dc_&quot;</span>, unique_root), <span class="fu">paste0</span>(<span class="st">&quot;pd_&quot;</span>, unique_root))</span>
-<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a></span>
-<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="co"># add back in the variables with no round prefix</span></span>
-<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>allpos <span class="ot">&lt;-</span> <span class="fu">c</span>(noprefix, allpos)</span></code></pre></div>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#CREATE CHILD AGE CATEGORIES</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>child_age_levels<span class="ot">=</span><span class="fu">c</span>(<span class="st">&quot;7 days or less&quot;</span>,<span class="st">&quot;8-14 days&quot;</span>,<span class="st">&quot;15-27 days&quot;</span>,<span class="st">&quot;28-60 days&quot;</span>,<span class="st">&quot;61-90 days&quot;</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>                   <span class="st">&quot;91-121 days&quot;</span>,<span class="st">&quot;121-180 days&quot;</span>,<span class="st">&quot;181 or more days&quot;</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>mdta <span class="ot">&lt;-</span> mdta <span class="sc">%&gt;%</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>    <span class="at">en_child_age_days_cat =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>      en_childage_d <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">&quot;7 days or less&quot;</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">8</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">15</span> <span class="sc">~</span> <span class="st">&quot;8-14 days&quot;</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">15</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">28</span> <span class="sc">~</span> <span class="st">&quot;15-27 days&quot;</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">28</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">61</span> <span class="sc">~</span> <span class="st">&quot;28-60 days&quot;</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">61</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">91</span> <span class="sc">~</span> <span class="st">&quot;61-90 days&quot;</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">91</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">121</span> <span class="sc">~</span> <span class="st">&quot;91-121 days&quot;</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">121</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">181</span> <span class="sc">~</span> <span class="st">&quot;121-180 days&quot;</span>,</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">181</span>  <span class="sc">~</span> <span class="st">&quot;181 or more days&quot;</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>    )</span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">en_child_age_days_cat =</span> <span class="fu">factor</span>(en_child_age_days_cat, </span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>                                               <span class="at">levels =</span> child_age_levels))</span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>Hmisc<span class="sc">::</span><span class="fu">label</span>(mdta<span class="sc">$</span>en_child_age_days_cat) <span class="ot">&lt;-</span> <span class="st">&quot;Age of hospitalized child in days (categorized)&quot;</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="co"># AT DISCHARGE</span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>mdta <span class="ot">&lt;-</span> mdta <span class="sc">%&gt;%</span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>    <span class="at">dc_child_age_days_cat =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>      dc_childage_d <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">&quot;7 days or less&quot;</span>,</span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">8</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">15</span> <span class="sc">~</span> <span class="st">&quot;8-14 days&quot;</span>,</span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">15</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">28</span> <span class="sc">~</span> <span class="st">&quot;15-27 days&quot;</span>,</span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">28</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">61</span> <span class="sc">~</span> <span class="st">&quot;28-60 days&quot;</span>,</span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">61</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">91</span> <span class="sc">~</span> <span class="st">&quot;61-90 days&quot;</span>,</span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">91</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">121</span> <span class="sc">~</span> <span class="st">&quot;91-121 days&quot;</span>,</span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">121</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">181</span> <span class="sc">~</span> <span class="st">&quot;121-180 days&quot;</span>,</span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">181</span>  <span class="sc">~</span> <span class="st">&quot;181 or more days&quot;</span></span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a>    )</span>
+<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">dc_child_age_days_cat =</span> <span class="fu">factor</span>(dc_child_age_days_cat, </span>
+<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a>                                               <span class="at">levels =</span> child_age_levels)) </span>
+<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a>Hmisc<span class="sc">::</span><span class="fu">label</span>(mdta<span class="sc">$</span>dc_child_age_days_cat) <span class="ot">&lt;-</span> <span class="st">&quot;Age of hospitalized child in days (categorized)&quot;</span></span>
+<span id="cb4-42"><a href="#cb4-42" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" tabindex="-1"></a><span class="co"># AT POST-DISCHARGE</span></span>
+<span id="cb4-44"><a href="#cb4-44" tabindex="-1"></a>mdta <span class="ot">&lt;-</span> mdta <span class="sc">%&gt;%</span></span>
+<span id="cb4-45"><a href="#cb4-45" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb4-46"><a href="#cb4-46" tabindex="-1"></a>    <span class="at">pd_child_age_days_cat =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb4-47"><a href="#cb4-47" tabindex="-1"></a>      pd_childage_d <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">&quot;7 days or less&quot;</span>,</span>
+<span id="cb4-48"><a href="#cb4-48" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">8</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">15</span> <span class="sc">~</span> <span class="st">&quot;8-14 days&quot;</span>,</span>
+<span id="cb4-49"><a href="#cb4-49" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">15</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">28</span> <span class="sc">~</span> <span class="st">&quot;15-27 days&quot;</span>,</span>
+<span id="cb4-50"><a href="#cb4-50" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">28</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">61</span> <span class="sc">~</span> <span class="st">&quot;28-60 days&quot;</span>,</span>
+<span id="cb4-51"><a href="#cb4-51" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">61</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">91</span> <span class="sc">~</span> <span class="st">&quot;61-90 days&quot;</span>,</span>
+<span id="cb4-52"><a href="#cb4-52" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">91</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">121</span> <span class="sc">~</span> <span class="st">&quot;91-121 days&quot;</span>,</span>
+<span id="cb4-53"><a href="#cb4-53" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">121</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">181</span> <span class="sc">~</span> <span class="st">&quot;121-180 days&quot;</span>,</span>
+<span id="cb4-54"><a href="#cb4-54" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">181</span>  <span class="sc">~</span> <span class="st">&quot;181 or more days&quot;</span></span>
+<span id="cb4-55"><a href="#cb4-55" tabindex="-1"></a>    )</span>
+<span id="cb4-56"><a href="#cb4-56" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb4-57"><a href="#cb4-57" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">pd_child_age_days_cat =</span> <span class="fu">factor</span>(pd_child_age_days_cat, </span>
+<span id="cb4-58"><a href="#cb4-58" tabindex="-1"></a>                                               <span class="at">levels =</span> child_age_levels))</span>
+<span id="cb4-59"><a href="#cb4-59" tabindex="-1"></a>Hmisc<span class="sc">::</span><span class="fu">label</span>(mdta<span class="sc">$</span>pd_child_age_days_cat) <span class="ot">&lt;-</span> <span class="st">&quot;Age of hospitalized child in days (categorized)&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># MIKE&#39;S CODE TO CREATE DB FOR GLOBAL</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co"># THANKS MIKE!</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># Variables to send to Global: only the s1 vars listed. have to check for s2 &amp; s3</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># globalvars &lt;- import(vars_to_send_to_global)</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># gvars &lt;- globalvars$variable</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>globalvars <span class="ot">&lt;-</span> <span class="fu">import</span>(vars_to_send_to_global)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>gvars <span class="ot">&lt;-</span> <span class="fu">unique</span>(globalvars<span class="sc">$</span><span class="st">`</span><span class="at">Variable Name</span><span class="st">`</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="do">## Checking for s2 &amp; s3 variables</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co"># separate out the variables without a round prefix</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>noprefix <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;site&quot;</span>,<span class="st">&quot;region2&quot;</span>, <span class="st">&quot;los&quot;</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>include <span class="ot">&lt;-</span> gvars[<span class="sc">-</span><span class="fu">which</span>(gvars <span class="sc">%in%</span> noprefix)]</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co"># just take the root of all the variables and then prefix the rounds</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co"># DGS </span><span class="al">NOTE</span><span class="co">: depanx(3 times), housing3.factor (twice) and survlang (3 times)</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co"># ALL APPEAR MORE THAN ONE.DO A UNIQUE</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>root <span class="ot">&lt;-</span> <span class="fu">substr</span>(include, <span class="dv">4</span>, <span class="fu">nchar</span>(include))</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>unique_root<span class="ot">=</span><span class="fu">unique</span>(root)</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co"># all possibilities of variable names to check for</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>allpos <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">paste0</span>(<span class="st">&quot;en_&quot;</span>, unique_root), <span class="fu">paste0</span>(<span class="st">&quot;dc_&quot;</span>, unique_root), <span class="fu">paste0</span>(<span class="st">&quot;pd_&quot;</span>, unique_root))</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co"># add back in the variables with no round prefix</span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>allpos <span class="ot">&lt;-</span> <span class="fu">c</span>(noprefix, allpos)</span></code></pre></div>
 </div>
 </div>
 <div id="swap-out-if-there-is-a-factor-version" class="section level1">
@@ -1684,249 +1742,296 @@ and Dave</p>
 <p>Currently not evaluating this code. It’s a good idea, as there are
 many variables with factor equivalents, but it ended up leading to the
 program crashing, and I couldn’t find the tiem to figure out why.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>allpos_w_factor_equivalents<span class="ot">=</span>allpos</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(allpos)){</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  factor_name<span class="ot">=</span><span class="fu">paste0</span>(allpos[i],<span class="st">&quot;.factor&quot;</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  allpos_w_factor_equivalents[i]<span class="ot">=</span><span class="fu">ifelse</span>(factor_name <span class="sc">%in%</span> <span class="fu">names</span>(mdta),factor_name,allpos[i])</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>allpos_w_factor_equivalents<span class="ot">=</span>allpos</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(allpos)){</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  factor_name<span class="ot">=</span><span class="fu">paste0</span>(allpos[i],<span class="st">&quot;.factor&quot;</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  allpos_w_factor_equivalents[i]<span class="ot">=</span><span class="fu">ifelse</span>(factor_name <span class="sc">%in%</span> <span class="fu">names</span>(mdta),factor_name,allpos[i])</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div id="subset-to-vars" class="section level1">
 <h1>Subset to vars</h1>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># get all variables in allpos which are actual variables in mdta</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#globdata &lt;-mdta %&gt;% dplyr::select(any_of(allpos_w_factor_equivalents))</span></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>globdata <span class="ot">&lt;-</span>mdta <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">any_of</span>(allpos))</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># get all variables in allpos which are actual variables in mdta</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#globdata &lt;-mdta %&gt;% dplyr::select(any_of(allpos_w_factor_equivalents))</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>globdata <span class="ot">&lt;-</span>mdta <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">any_of</span>(allpos))</span></code></pre></div>
 </div>
 <div id="aggregate-langs-if-5-or-fewer-at-a-site" class="section level1">
 <h1>Aggregate langs if 5 or fewer at a site</h1>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># SHOW LANGUAGE DISTRIBUTION, BEFORE TURNING LESS FREQ LANGS TO OTHER</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>before<span class="ot">=</span> globdata <span class="sc">|&gt;</span> </span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(site,en_survlang.factor) <span class="sc">|&gt;</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">tally</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="fu">spread</span>(en_survlang.factor,n)</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="fu">print</span>(<span class="at">n=</span><span class="dv">15</span>,before)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># SHOW LANGUAGE DISTRIBUTION, BEFORE TURNING LESS FREQ LANGS TO OTHER</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>before<span class="ot">=</span> globdata <span class="sc">|&gt;</span> </span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(site,en_survlang.factor) <span class="sc">|&gt;</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">tally</span>() <span class="sc">|&gt;</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="fu">spread</span>(en_survlang.factor,n)</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="fu">print</span>(<span class="at">n=</span><span class="dv">15</span>,before)</span></code></pre></div>
 <pre><code>## # A tibble: 1 × 5
 ## # Groups:   site [1]
 ##   site       Papiamentu Nederlands Español English
 ##   &lt;labelled&gt;      &lt;int&gt;      &lt;int&gt;   &lt;int&gt;   &lt;int&gt;
 ## 1 curacao            28          8       4      10</code></pre>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="cf">for</span> (var <span class="cf">in</span> <span class="fu">c</span>(<span class="st">&quot;en_survlang.factor&quot;</span>,<span class="st">&quot;dc_survlang.factor&quot;</span>,<span class="st">&quot;pd_survlang.factor&quot;</span>)) {</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="cf">for</span> (house <span class="cf">in</span> <span class="fu">unique</span>(globdata<span class="sc">$</span>site)) {</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>    few_speakers <span class="ot">=</span> globdata <span class="sc">|&gt;</span></span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">filter</span>(site<span class="sc">==</span>house) <span class="sc">|&gt;</span></span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">group_by</span>(<span class="sc">!!</span>rlang<span class="sc">::</span><span class="fu">sym</span>(var)) <span class="sc">|&gt;</span></span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">tally</span>() <span class="sc">|&gt;</span></span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">filter</span>(n<span class="sc">&lt;=</span><span class="dv">6</span>) <span class="sc">|&gt;</span></span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>n)</span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a></span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>langs_to_code_as_other<span class="ot">=</span><span class="fu">as.character</span>(few_speakers)</span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a></span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>globdata[globdata<span class="sc">$</span>site<span class="sc">==</span>house <span class="sc">&amp;</span> globdata[,var] <span class="sc">%in%</span> langs_to_code_as_other,var]<span class="ot">=</span><span class="st">&quot;ot&quot;</span></span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  }</span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>}</span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a></span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>after<span class="ot">=</span> globdata <span class="sc">|&gt;</span> </span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(site,en_survlang.factor) <span class="sc">|&gt;</span></span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">tally</span>() <span class="sc">|&gt;</span></span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>  <span class="fu">spread</span>(en_survlang.factor,n)</span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="fu">print</span>(<span class="at">n=</span><span class="dv">15</span>,after)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>globdata <span class="ot">=</span> globdata <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">en_survlang.factor =</span> <span class="fu">fct_recode</span>(en_survlang.factor,<span class="st">&quot;Other&quot;</span><span class="ot">=</span><span class="st">&quot;Español&quot;</span>),</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>         <span class="at">dc_survlang.factor =</span> <span class="fu">fct_recode</span>(dc_survlang.factor,<span class="st">&quot;Other&quot;</span><span class="ot">=</span><span class="st">&quot;Español&quot;</span>),</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>         <span class="at">pd_survlang.factor =</span> <span class="fu">fct_recode</span>(pd_survlang.factor,<span class="st">&quot;Other&quot;</span><span class="ot">=</span><span class="st">&quot;Español&quot;</span>),</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>         <span class="at">en_homelang.factor =</span> <span class="fu">fct_recode</span>(en_homelang.factor,<span class="st">&quot;Other&quot;</span><span class="ot">=</span><span class="st">&quot;Spanish&quot;</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  )</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>globdata<span class="sc">$</span>en_survlang[globdata<span class="sc">$</span>en_survlang<span class="sc">==</span><span class="st">&quot;es&quot;</span>]<span class="ot">=</span><span class="st">&quot;ot&quot;</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>globdata<span class="sc">$</span>dc_survlang[globdata<span class="sc">$</span>dc_survlang<span class="sc">==</span><span class="st">&quot;es&quot;</span>]<span class="ot">=</span><span class="st">&quot;ot&quot;</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>globdata<span class="sc">$</span>pd_survlang[globdata<span class="sc">$</span>pd_survlang<span class="sc">==</span><span class="st">&quot;es&quot;</span>]<span class="ot">=</span><span class="st">&quot;ot&quot;</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>after<span class="ot">=</span> globdata <span class="sc">|&gt;</span> </span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(site,en_survlang.factor) <span class="sc">|&gt;</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">tally</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>  <span class="fu">spread</span>(en_survlang.factor,n)</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="fu">print</span>(<span class="at">n=</span><span class="dv">15</span>,after)</span></code></pre></div>
 <pre><code>## # A tibble: 1 × 5
 ## # Groups:   site [1]
-##   site       Papiamentu Nederlands Español English
-##   &lt;labelled&gt;      &lt;int&gt;      &lt;int&gt;   &lt;int&gt;   &lt;int&gt;
-## 1 curacao            28          8       4      10</code></pre>
+##   site       Papiamentu Nederlands Other English
+##   &lt;labelled&gt;      &lt;int&gt;      &lt;int&gt; &lt;int&gt;   &lt;int&gt;
+## 1 curacao            28          8     4      10</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>child_age_levels<span class="ot">=</span><span class="fu">c</span>(<span class="st">&quot;7 days or less&quot;</span>,<span class="st">&quot;8-14 days&quot;</span>,<span class="st">&quot;15-27 days&quot;</span>,<span class="st">&quot;28-60 days&quot;</span>,<span class="st">&quot;61-90 days&quot;</span>,</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>                   <span class="st">&quot;91-121 days&quot;</span>,<span class="st">&quot;121-180 days&quot;</span>,<span class="st">&quot;181 or more days&quot;</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>globdata <span class="ot">&lt;-</span> globdata <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>    <span class="at">en_child_age_days_cat =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>      en_childage_d <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">&quot;7 days or less&quot;</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">8</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">15</span> <span class="sc">~</span> <span class="st">&quot;8-14 days&quot;</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">15</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">28</span> <span class="sc">~</span> <span class="st">&quot;15-27 days&quot;</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">28</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">61</span> <span class="sc">~</span> <span class="st">&quot;28-60 days&quot;</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">61</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">91</span> <span class="sc">~</span> <span class="st">&quot;61-90 days&quot;</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">91</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">121</span> <span class="sc">~</span> <span class="st">&quot;91-121 days&quot;</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">121</span> <span class="sc">&amp;</span> en_childage_d <span class="sc">&lt;</span> <span class="dv">181</span> <span class="sc">~</span> <span class="st">&quot;121-180 days&quot;</span>,</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>      en_childage_d <span class="sc">&gt;=</span> <span class="dv">181</span>  <span class="sc">~</span> <span class="st">&quot;181 or more days&quot;</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>    )</span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">en_child_age_days_cat =</span> <span class="fu">factor</span>(en_child_age_days_cat, </span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>                                               <span class="at">levels =</span> child_age_levels)) </span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co"># AT DISCHARGE</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>globdata <span class="ot">&lt;-</span> globdata <span class="sc">%&gt;%</span></span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a>    <span class="at">dc_child_age_days_cat =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>      dc_childage_d <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">&quot;7 days or less&quot;</span>,</span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">8</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">15</span> <span class="sc">~</span> <span class="st">&quot;8-14 days&quot;</span>,</span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">15</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">28</span> <span class="sc">~</span> <span class="st">&quot;15-27 days&quot;</span>,</span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">28</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">61</span> <span class="sc">~</span> <span class="st">&quot;28-60 days&quot;</span>,</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">61</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">91</span> <span class="sc">~</span> <span class="st">&quot;61-90 days&quot;</span>,</span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">91</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">121</span> <span class="sc">~</span> <span class="st">&quot;91-121 days&quot;</span>,</span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">121</span> <span class="sc">&amp;</span> dc_childage_d <span class="sc">&lt;</span> <span class="dv">181</span> <span class="sc">~</span> <span class="st">&quot;121-180 days&quot;</span>,</span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>      dc_childage_d <span class="sc">&gt;=</span> <span class="dv">181</span>  <span class="sc">~</span> <span class="st">&quot;181 or more days&quot;</span></span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a>    )</span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">dc_child_age_days_cat =</span> <span class="fu">factor</span>(dc_child_age_days_cat, </span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>                                               <span class="at">levels =</span> child_age_levels)) </span>
+<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a><span class="co"># AT POST-DISCHARGE</span></span>
+<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a>globdata <span class="ot">&lt;-</span> globdata <span class="sc">%&gt;%</span></span>
+<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a>    <span class="at">pd_child_age_days_cat =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a>      pd_childage_d <span class="sc">&lt;</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">&quot;7 days or less&quot;</span>,</span>
+<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">8</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">15</span> <span class="sc">~</span> <span class="st">&quot;8-14 days&quot;</span>,</span>
+<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">15</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">28</span> <span class="sc">~</span> <span class="st">&quot;15-27 days&quot;</span>,</span>
+<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">28</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">61</span> <span class="sc">~</span> <span class="st">&quot;28-60 days&quot;</span>,</span>
+<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">61</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">91</span> <span class="sc">~</span> <span class="st">&quot;61-90 days&quot;</span>,</span>
+<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">91</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">121</span> <span class="sc">~</span> <span class="st">&quot;91-121 days&quot;</span>,</span>
+<span id="cb12-44"><a href="#cb12-44" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">121</span> <span class="sc">&amp;</span> pd_childage_d <span class="sc">&lt;</span> <span class="dv">181</span> <span class="sc">~</span> <span class="st">&quot;121-180 days&quot;</span>,</span>
+<span id="cb12-45"><a href="#cb12-45" tabindex="-1"></a>      pd_childage_d <span class="sc">&gt;=</span> <span class="dv">181</span>  <span class="sc">~</span> <span class="st">&quot;181 or more days&quot;</span></span>
+<span id="cb12-46"><a href="#cb12-46" tabindex="-1"></a>    )</span>
+<span id="cb12-47"><a href="#cb12-47" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb12-48"><a href="#cb12-48" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">pd_child_age_days_cat =</span> <span class="fu">factor</span>(pd_child_age_days_cat, </span>
+<span id="cb12-49"><a href="#cb12-49" tabindex="-1"></a>                                               <span class="at">levels =</span> child_age_levels)) </span></code></pre></div>
 </div>
 <div id="initialize-codebook" class="section level1">
 <h1>Initialize codebook</h1>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co">#INITIAL CODEBOOK, WITH SOME HOLES TO FILL</span></span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">vt</span>(globdata, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>num_need_label<span class="ot">=</span><span class="fu">length</span>(codebook<span class="sc">$</span>Label[codebook<span class="sc">$</span>Label<span class="sc">==</span><span class="st">&quot;NULL&quot;</span>])</span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">&quot;Number of vars that still need a label: &quot;</span>,num_need_label))</span></code></pre></div>
-<pre><code>## [1] &quot;Number of vars that still need a label: 121&quot;</code></pre>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co">#IDENTIFY UNLABELED VARIABLES, USE LABELS FROM THE SKELETON SPREADSHEET</span></span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>xtra_labels<span class="ot">=</span><span class="fu">read_excel</span>(skeleton_file_w_variable_labels,<span class="at">sheet=</span><span class="st">&quot;Sheet 1&quot;</span>)</span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>these_vars_need_label <span class="ot">=</span> codebook <span class="sc">|&gt;</span> </span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(Label<span class="sc">==</span><span class="st">&quot;NULL&quot;</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Name)</span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a></span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="cf">for</span>(var <span class="cf">in</span> these_vars_need_label<span class="sc">$</span>Name){</span>
-<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  lab <span class="ot">=</span> xtra_labels <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(variable<span class="sc">==</span>var) <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(question)</span>
-<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">length</span>(lab)<span class="sc">&gt;</span><span class="dv">1</span>) {</span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>    lab<span class="ot">=</span>lab[<span class="dv">1</span>]</span>
-<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>  }</span>
-<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span>berryFunctions<span class="sc">::</span><span class="fu">is.error</span>(<span class="fu">eval</span>(<span class="fu">parse</span>(<span class="at">text=</span><span class="fu">paste0</span>(<span class="st">&quot;Hmisc::label(globdata$&quot;</span>,var,<span class="st">&quot;) &lt;- lab&quot;</span>))))) {</span>
-<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>      <span class="fu">eval</span>(<span class="fu">parse</span>(<span class="at">text=</span><span class="fu">paste0</span>(<span class="st">&quot;Hmisc::label(globdata$&quot;</span>,var,<span class="st">&quot;) &lt;- lab&quot;</span>)))</span>
-<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>  }</span>
-<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>}</span>
-<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a></span>
-<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a><span class="co"># REDO THE CODEBOOK W/ THE NEW LABELS</span></span>
-<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">vt</span>(globdata, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
-<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a>num_need_label<span class="ot">=</span><span class="fu">length</span>(codebook<span class="sc">$</span>Label[codebook<span class="sc">$</span>Label<span class="sc">==</span><span class="st">&quot;NULL&quot;</span>])</span>
-<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">&quot;Number of vars that still need a label: &quot;</span>,num_need_label))</span></code></pre></div>
-<pre><code>## [1] &quot;Number of vars that still need a label: 28&quot;</code></pre>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co">#ONLY THE FIRST CHECKBOXES ARE LABELED. ADD LABELS TO THE OTHERS</span></span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="co">#IF NO LABEL, BUT NAME HAS SAME PREFIX AS PREVIOUS VAR, USE LABEL OF PREVIOUS VAR</span></span>
-<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">nrow</span>(codebook)) {</span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">substr</span>(codebook[i,<span class="st">&quot;Name&quot;</span>],<span class="dv">1</span>,<span class="dv">6</span>)<span class="sc">==</span><span class="fu">substr</span>(codebook[i<span class="dv">-1</span>,<span class="st">&quot;Name&quot;</span>],<span class="dv">1</span>,<span class="dv">6</span>) <span class="sc">&amp;</span> <span class="fu">is.na</span>(codebook[i,<span class="st">&quot;Label&quot;</span>])) {</span>
-<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>    add_this_label<span class="ot">=</span>codebook[i<span class="dv">-1</span>,<span class="st">&quot;Label&quot;</span>]</span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>    var<span class="ot">=</span>codebook[i,<span class="st">&quot;Name&quot;</span>]</span>
-<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>    <span class="co">#CHANGE IN globdata AND IN codebook, THE CODEBOOK</span></span>
-<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>    <span class="fu">eval</span>(<span class="fu">parse</span>(<span class="at">text=</span><span class="fu">paste0</span>(<span class="st">&quot;Hmisc::label(globdata$&quot;</span>,var,<span class="st">&quot;) &lt;- add_this_label&quot;</span>)))</span>
-<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>    codebook[i,<span class="st">&quot;Label&quot;</span>]<span class="ot">=</span>add_this_label</span>
-<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>  }</span>
-<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>}</span>
-<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a></span>
-<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="co">#FOR CHECKBOXES WE HAVE HAVE THE QUESTION, BUT NEED TO ADD THE CORRESPONDING  </span></span>
-<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="co">#ANSWER WHICH IS IN skeleton_file_w_variable_labels. FIRST RERUN CODEBOOK</span></span>
-<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">vt</span>(globdata, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
-<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(codebook)) {</span>
-<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a>  var<span class="ot">=</span>codebook[i,<span class="st">&quot;Name&quot;</span>]</span>
-<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">grepl</span>(<span class="st">&#39;___&#39;</span>,var)) {</span>
-<span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a>    answer <span class="ot">=</span> xtra_labels <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(variable<span class="sc">==</span>var) <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(level_label)</span>
-<span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a>    add_this_label<span class="ot">=</span><span class="fu">paste0</span>(codebook[i,<span class="st">&quot;Label&quot;</span>],<span class="st">&quot; &quot;</span>,answer)</span>
-<span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a>    <span class="co">#CHANGE IN globdata AND IN codebook, THE CODEBOOK</span></span>
-<span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a>    <span class="fu">eval</span>(<span class="fu">parse</span>(<span class="at">text=</span><span class="fu">paste0</span>(<span class="st">&quot;Hmisc::label(globdata$&quot;</span>,var,<span class="st">&quot;) &lt;- add_this_label&quot;</span>)))</span>
-<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a>  }</span>
-<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a>}</span>
-<span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">vt</span>(globdata, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
-<span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a></span>
-<span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a><span class="co"># IF STILL MISSING TRY TO USE variable_label AS THE VARIABLE LABEL</span></span>
-<span id="cb15-28"><a href="#cb15-28" tabindex="-1"></a>these_vars_still_need_label <span class="ot">=</span> codebook <span class="sc">|&gt;</span> </span>
-<span id="cb15-29"><a href="#cb15-29" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="fu">is.na</span>(Label)) <span class="sc">|&gt;</span> </span>
-<span id="cb15-30"><a href="#cb15-30" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Name)</span>
-<span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a></span>
-<span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a><span class="cf">for</span>(var <span class="cf">in</span> these_vars_still_need_label<span class="sc">$</span>Name){</span>
-<span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a>  lab <span class="ot">=</span> xtra_labels <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(variable<span class="sc">==</span>var) <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(variable_label)</span>
-<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">length</span>(lab)<span class="sc">&gt;</span><span class="dv">1</span>) lab<span class="ot">=</span>lab[<span class="dv">1</span>]</span>
-<span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a>  <span class="fu">eval</span>(<span class="fu">parse</span>(<span class="at">text=</span><span class="fu">paste0</span>(<span class="st">&quot;Hmisc::label(globdata$&quot;</span>,var,<span class="st">&quot;) &lt;- lab&quot;</span>)))</span>
-<span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a>}</span>
-<span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a></span>
-<span id="cb15-38"><a href="#cb15-38" tabindex="-1"></a><span class="co">#WE HAVE THE VARIABLE LABELS! MAYBE NOT THE VALUE LABELS</span></span>
-<span id="cb15-39"><a href="#cb15-39" tabindex="-1"></a><span class="co">#FOR CLARITY, CREATE A COLUMN W/ THE DATA TYPE</span></span>
-<span id="cb15-40"><a href="#cb15-40" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">vt</span>(globdata, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
-<span id="cb15-41"><a href="#cb15-41" tabindex="-1"></a></span>
-<span id="cb15-42"><a href="#cb15-42" tabindex="-1"></a>codebook<span class="sc">$</span>Type<span class="ot">=</span><span class="st">&quot;&quot;</span></span>
-<span id="cb15-43"><a href="#cb15-43" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(codebook)){</span>
-<span id="cb15-44"><a href="#cb15-44" tabindex="-1"></a>  var<span class="ot">=</span>codebook[i,<span class="st">&quot;Name&quot;</span>]</span>
-<span id="cb15-45"><a href="#cb15-45" tabindex="-1"></a>  var_class<span class="ot">=</span><span class="fu">class</span>(globdata[,var])</span>
-<span id="cb15-46"><a href="#cb15-46" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>((var_class))<span class="sc">==</span><span class="dv">1</span>) {</span>
-<span id="cb15-47"><a href="#cb15-47" tabindex="-1"></a>    var_type<span class="ot">=</span>var_class[<span class="dv">1</span>]</span>
-<span id="cb15-48"><a href="#cb15-48" tabindex="-1"></a>  } <span class="cf">else</span> </span>
-<span id="cb15-49"><a href="#cb15-49" tabindex="-1"></a>    var_type<span class="ot">=</span>var_class[<span class="dv">2</span>]</span>
-<span id="cb15-50"><a href="#cb15-50" tabindex="-1"></a>  codebook[i,<span class="st">&quot;Type&quot;</span>]<span class="ot">=</span>var_type</span>
-<span id="cb15-51"><a href="#cb15-51" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co">#INITIAL CODEBOOK, WITH SOME HOLES TO FILL</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">vt</span>(globdata, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>num_need_label<span class="ot">=</span><span class="fu">length</span>(codebook<span class="sc">$</span>Label[codebook<span class="sc">$</span>Label<span class="sc">==</span><span class="st">&quot;NULL&quot;</span>])</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">&quot;Number of vars that still need a label: &quot;</span>,num_need_label))</span></code></pre></div>
+<pre><code>## [1] &quot;Number of vars that still need a label: 124&quot;</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co">#IDENTIFY UNLABELED VARIABLES, USE LABELS FROM THE SKELETON SPREADSHEET</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>xtra_labels<span class="ot">=</span><span class="fu">read_excel</span>(skeleton_file_w_variable_labels,<span class="at">sheet=</span><span class="st">&quot;Sheet 1&quot;</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>these_vars_need_label <span class="ot">=</span> codebook <span class="sc">|&gt;</span> </span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(Label<span class="sc">==</span><span class="st">&quot;NULL&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Name)</span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="cf">for</span>(var <span class="cf">in</span> these_vars_need_label<span class="sc">$</span>Name){</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  lab <span class="ot">=</span> xtra_labels <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(variable<span class="sc">==</span>var) <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(question)</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">length</span>(lab)<span class="sc">&gt;</span><span class="dv">1</span>) {</span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>    lab<span class="ot">=</span>lab[<span class="dv">1</span>]</span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>  }</span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span>berryFunctions<span class="sc">::</span><span class="fu">is.error</span>(<span class="fu">eval</span>(<span class="fu">parse</span>(<span class="at">text=</span><span class="fu">paste0</span>(<span class="st">&quot;Hmisc::label(globdata$&quot;</span>,var,<span class="st">&quot;) &lt;- lab&quot;</span>))))) {</span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>      <span class="fu">eval</span>(<span class="fu">parse</span>(<span class="at">text=</span><span class="fu">paste0</span>(<span class="st">&quot;Hmisc::label(globdata$&quot;</span>,var,<span class="st">&quot;) &lt;- lab&quot;</span>)))</span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a>  }</span>
+<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a>}</span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a></span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a><span class="co"># REDO THE CODEBOOK W/ THE NEW LABELS</span></span>
+<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">vt</span>(globdata, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
+<span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a>num_need_label<span class="ot">=</span><span class="fu">length</span>(codebook<span class="sc">$</span>Label[codebook<span class="sc">$</span>Label<span class="sc">==</span><span class="st">&quot;NULL&quot;</span>])</span>
+<span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">&quot;Number of vars that still need a label: &quot;</span>,num_need_label))</span></code></pre></div>
+<pre><code>## [1] &quot;Number of vars that still need a label: 32&quot;</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co">#ONLY THE FIRST CHECKBOXES ARE LABELED. ADD LABELS TO THE OTHERS</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="co">#IF NO LABEL, BUT NAME HAS SAME PREFIX AS PREVIOUS VAR, USE LABEL OF PREVIOUS VAR</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">nrow</span>(codebook)) {</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">substr</span>(codebook[i,<span class="st">&quot;Name&quot;</span>],<span class="dv">1</span>,<span class="dv">6</span>)<span class="sc">==</span><span class="fu">substr</span>(codebook[i<span class="dv">-1</span>,<span class="st">&quot;Name&quot;</span>],<span class="dv">1</span>,<span class="dv">6</span>) <span class="sc">&amp;</span> <span class="fu">is.na</span>(codebook[i,<span class="st">&quot;Label&quot;</span>])) {</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>    add_this_label<span class="ot">=</span>codebook[i<span class="dv">-1</span>,<span class="st">&quot;Label&quot;</span>]</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>    var<span class="ot">=</span>codebook[i,<span class="st">&quot;Name&quot;</span>]</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>    <span class="co">#CHANGE IN globdata AND IN codebook, THE CODEBOOK</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a>    <span class="fu">eval</span>(<span class="fu">parse</span>(<span class="at">text=</span><span class="fu">paste0</span>(<span class="st">&quot;Hmisc::label(globdata$&quot;</span>,var,<span class="st">&quot;) &lt;- add_this_label&quot;</span>)))</span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>    codebook[i,<span class="st">&quot;Label&quot;</span>]<span class="ot">=</span>add_this_label</span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>  }</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>}</span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co">#FOR CHECKBOXES WE HAVE HAVE THE QUESTION, BUT NEED TO ADD THE CORRESPONDING  </span></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co">#ANSWER WHICH IS IN skeleton_file_w_variable_labels. FIRST RERUN CODEBOOK</span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">vt</span>(globdata, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(codebook)) {</span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a>  var<span class="ot">=</span>codebook[i,<span class="st">&quot;Name&quot;</span>]</span>
+<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">grepl</span>(<span class="st">&#39;___&#39;</span>,var)) {</span>
+<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a>    answer <span class="ot">=</span> xtra_labels <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(variable<span class="sc">==</span>var) <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(level_label)</span>
+<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a>    add_this_label<span class="ot">=</span><span class="fu">paste0</span>(codebook[i,<span class="st">&quot;Label&quot;</span>],<span class="st">&quot; &quot;</span>,answer)</span>
+<span id="cb17-21"><a href="#cb17-21" tabindex="-1"></a>    <span class="co">#CHANGE IN globdata AND IN codebook, THE CODEBOOK</span></span>
+<span id="cb17-22"><a href="#cb17-22" tabindex="-1"></a>    <span class="fu">eval</span>(<span class="fu">parse</span>(<span class="at">text=</span><span class="fu">paste0</span>(<span class="st">&quot;Hmisc::label(globdata$&quot;</span>,var,<span class="st">&quot;) &lt;- add_this_label&quot;</span>)))</span>
+<span id="cb17-23"><a href="#cb17-23" tabindex="-1"></a>  }</span>
+<span id="cb17-24"><a href="#cb17-24" tabindex="-1"></a>}</span>
+<span id="cb17-25"><a href="#cb17-25" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">vt</span>(globdata, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
+<span id="cb17-26"><a href="#cb17-26" tabindex="-1"></a></span>
+<span id="cb17-27"><a href="#cb17-27" tabindex="-1"></a><span class="co"># IF STILL MISSING TRY TO USE variable_label AS THE VARIABLE LABEL</span></span>
+<span id="cb17-28"><a href="#cb17-28" tabindex="-1"></a>these_vars_still_need_label <span class="ot">=</span> codebook <span class="sc">|&gt;</span> </span>
+<span id="cb17-29"><a href="#cb17-29" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="fu">is.na</span>(Label)) <span class="sc">|&gt;</span> </span>
+<span id="cb17-30"><a href="#cb17-30" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Name)</span>
+<span id="cb17-31"><a href="#cb17-31" tabindex="-1"></a></span>
+<span id="cb17-32"><a href="#cb17-32" tabindex="-1"></a><span class="cf">for</span>(var <span class="cf">in</span> these_vars_still_need_label<span class="sc">$</span>Name){</span>
+<span id="cb17-33"><a href="#cb17-33" tabindex="-1"></a>  lab <span class="ot">=</span> xtra_labels <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(variable<span class="sc">==</span>var) <span class="sc">|&gt;</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(variable_label)</span>
+<span id="cb17-34"><a href="#cb17-34" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">length</span>(lab)<span class="sc">&gt;</span><span class="dv">1</span>) lab<span class="ot">=</span>lab[<span class="dv">1</span>]</span>
+<span id="cb17-35"><a href="#cb17-35" tabindex="-1"></a>  <span class="fu">eval</span>(<span class="fu">parse</span>(<span class="at">text=</span><span class="fu">paste0</span>(<span class="st">&quot;Hmisc::label(globdata$&quot;</span>,var,<span class="st">&quot;) &lt;- lab&quot;</span>)))</span>
+<span id="cb17-36"><a href="#cb17-36" tabindex="-1"></a>}</span>
+<span id="cb17-37"><a href="#cb17-37" tabindex="-1"></a></span>
+<span id="cb17-38"><a href="#cb17-38" tabindex="-1"></a><span class="co">#WE HAVE THE VARIABLE LABELS! MAYBE NOT THE VALUE LABELS</span></span>
+<span id="cb17-39"><a href="#cb17-39" tabindex="-1"></a><span class="co">#FOR CLARITY, CREATE A COLUMN W/ THE DATA TYPE</span></span>
+<span id="cb17-40"><a href="#cb17-40" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">vt</span>(globdata, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
+<span id="cb17-41"><a href="#cb17-41" tabindex="-1"></a></span>
+<span id="cb17-42"><a href="#cb17-42" tabindex="-1"></a>codebook<span class="sc">$</span>Type<span class="ot">=</span><span class="st">&quot;&quot;</span></span>
+<span id="cb17-43"><a href="#cb17-43" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(codebook)){</span>
+<span id="cb17-44"><a href="#cb17-44" tabindex="-1"></a>  var<span class="ot">=</span>codebook[i,<span class="st">&quot;Name&quot;</span>]</span>
+<span id="cb17-45"><a href="#cb17-45" tabindex="-1"></a>  var_class<span class="ot">=</span><span class="fu">class</span>(globdata[,var])</span>
+<span id="cb17-46"><a href="#cb17-46" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>((var_class))<span class="sc">==</span><span class="dv">1</span>) {</span>
+<span id="cb17-47"><a href="#cb17-47" tabindex="-1"></a>    var_type<span class="ot">=</span>var_class[<span class="dv">1</span>]</span>
+<span id="cb17-48"><a href="#cb17-48" tabindex="-1"></a>  } <span class="cf">else</span> </span>
+<span id="cb17-49"><a href="#cb17-49" tabindex="-1"></a>    var_type<span class="ot">=</span>var_class[<span class="dv">2</span>]</span>
+<span id="cb17-50"><a href="#cb17-50" tabindex="-1"></a>  codebook[i,<span class="st">&quot;Type&quot;</span>]<span class="ot">=</span>var_type</span>
+<span id="cb17-51"><a href="#cb17-51" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div id="code-output-data-as-numeric" class="section level1">
 <h1>Code output data as numeric</h1>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>globdata_w_factor_as_numeric<span class="ot">=</span>globdata</span>
-<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a></span>
-<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co"># TRUST ME IT WILL BE EASIER IF SITES DON&#39;T HAVE CODES</span></span>
-<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>codebook<span class="sc">$</span>Type [<span class="dv">1</span>]<span class="ot">=</span><span class="st">&quot;Character&quot;</span></span>
-<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a></span>
-<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>vars_w_factor_in_name<span class="ot">=</span>codebook<span class="sc">$</span>Name[codebook<span class="sc">$</span>Type<span class="sc">==</span><span class="st">&quot;factor&quot;</span>]</span>
-<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a><span class="cf">for</span>(var <span class="cf">in</span> vars_w_factor_in_name) {</span>
-<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>  globdata_w_factor_as_numeric[,var]<span class="ot">=</span><span class="fu">as.numeric</span>(globdata_w_factor_as_numeric[,var])</span>
-<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a>}</span>
-<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a></span>
-<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a><span class="co"># CREATE A CODEBOOK W NUMERIC FACTORS, TO PULL THOSE NUMERIC VALUES, </span></span>
-<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a><span class="co"># THEN ADD THIS TO THE CODEBOOK</span></span>
-<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a>codebook_w_numeric<span class="ot">=</span><span class="fu">vt</span>(globdata_w_factor_as_numeric, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
-<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a></span>
-<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a>codebook<span class="ot">=</span>codebook <span class="sc">|&gt;</span></span>
-<span id="cb16-16"><a href="#cb16-16" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>Class) <span class="sc">|&gt;</span></span>
-<span id="cb16-17"><a href="#cb16-17" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">Orig_Values=</span>Values) <span class="sc">|&gt;</span></span>
-<span id="cb16-18"><a href="#cb16-18" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">relocate</span>(Type,<span class="at">.after =</span> Name)</span>
-<span id="cb16-19"><a href="#cb16-19" tabindex="-1"></a></span>
-<span id="cb16-20"><a href="#cb16-20" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">cbind</span>(codebook,<span class="at">Values_After_Fac2Num=</span>codebook_w_numeric<span class="sc">$</span>Values)</span>
-<span id="cb16-21"><a href="#cb16-21" tabindex="-1"></a></span>
-<span id="cb16-22"><a href="#cb16-22" tabindex="-1"></a>char_array_to_txt <span class="ot">&lt;-</span> <span class="cf">function</span>(char_array) {</span>
-<span id="cb16-23"><a href="#cb16-23" tabindex="-1"></a>  concatenated_str_vec<span class="ot">=</span><span class="fu">vector2String</span>(char_array)</span>
-<span id="cb16-24"><a href="#cb16-24" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">substr</span>(concatenated_str_vec,<span class="dv">3</span>,<span class="fu">nchar</span>(concatenated_str_vec)<span class="sc">-</span><span class="dv">1</span>))</span>
-<span id="cb16-25"><a href="#cb16-25" tabindex="-1"></a>}</span>
-<span id="cb16-26"><a href="#cb16-26" tabindex="-1"></a></span>
-<span id="cb16-27"><a href="#cb16-27" tabindex="-1"></a><span class="co">#CREATE A FINAL COLUMN COMBINING THE NUMERIC FACTORS WITH THEIR LEVELS</span></span>
-<span id="cb16-28"><a href="#cb16-28" tabindex="-1"></a>codebook<span class="sc">$</span>Factor_levels<span class="ot">=</span><span class="st">&quot;&quot;</span></span>
-<span id="cb16-29"><a href="#cb16-29" tabindex="-1"></a>codebook<span class="sc">$</span>Data_Range<span class="ot">=</span><span class="st">&quot;&quot;</span></span>
-<span id="cb16-30"><a href="#cb16-30" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(codebook)){</span>
-<span id="cb16-31"><a href="#cb16-31" tabindex="-1"></a>  var<span class="ot">=</span>codebook[i,<span class="st">&quot;Name&quot;</span>]</span>
-<span id="cb16-32"><a href="#cb16-32" tabindex="-1"></a>  <span class="cf">if</span>(codebook[i,<span class="st">&quot;Type&quot;</span>]<span class="sc">==</span><span class="st">&quot;factor&quot;</span>) {</span>
-<span id="cb16-33"><a href="#cb16-33" tabindex="-1"></a>  <span class="co">#if(grepl(&quot;factor&quot;,var)) {</span></span>
-<span id="cb16-34"><a href="#cb16-34" tabindex="-1"></a>    fac_levels<span class="ot">=</span><span class="fu">levels</span>(globdata[,var])</span>
-<span id="cb16-35"><a href="#cb16-35" tabindex="-1"></a>    codebook[i,<span class="st">&quot;Factor_levels&quot;</span>]<span class="ot">=</span><span class="fu">char_array_to_txt</span>(fac_levels)</span>
-<span id="cb16-36"><a href="#cb16-36" tabindex="-1"></a>    codebook[i,<span class="st">&quot;Data_Range&quot;</span>]<span class="ot">=</span><span class="fu">paste0</span>(codebook[i,<span class="st">&quot;Values_After_Fac2Num&quot;</span>],<span class="st">&quot;, corresponding to: &quot;</span>,codebook[i,<span class="st">&quot;Factor_levels&quot;</span>])</span>
-<span id="cb16-37"><a href="#cb16-37" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb16-38"><a href="#cb16-38" tabindex="-1"></a>    codebook[i,<span class="st">&quot;Data_Range&quot;</span>]<span class="ot">=</span>codebook[i,<span class="st">&quot;Orig_Values&quot;</span>]</span>
-<span id="cb16-39"><a href="#cb16-39" tabindex="-1"></a>  }</span>
-<span id="cb16-40"><a href="#cb16-40" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>globdata_w_factor_as_numeric<span class="ot">=</span>globdata</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="co"># TRUST ME IT WILL BE EASIER IF SITES DON&#39;T HAVE CODES</span></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>codebook<span class="sc">$</span>Type [<span class="dv">1</span>]<span class="ot">=</span><span class="st">&quot;Character&quot;</span></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>vars_w_factor_in_name<span class="ot">=</span>codebook<span class="sc">$</span>Name[codebook<span class="sc">$</span>Type<span class="sc">==</span><span class="st">&quot;factor&quot;</span>]</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="cf">for</span>(var <span class="cf">in</span> vars_w_factor_in_name) {</span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a>  globdata_w_factor_as_numeric[,var]<span class="ot">=</span><span class="fu">as.numeric</span>(globdata_w_factor_as_numeric[,var])</span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a>}</span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="co"># CREATE A CODEBOOK W NUMERIC FACTORS, TO PULL THOSE NUMERIC VALUES, </span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a><span class="co"># THEN ADD THIS TO THE CODEBOOK</span></span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a>codebook_w_numeric<span class="ot">=</span><span class="fu">vt</span>(globdata_w_factor_as_numeric, <span class="at">factor.limit=</span><span class="dv">0</span>, <span class="at">out=</span><span class="st">&quot;return&quot;</span>)</span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a>codebook<span class="ot">=</span>codebook <span class="sc">|&gt;</span></span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>Class) <span class="sc">|&gt;</span></span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">Orig_Values=</span>Values) <span class="sc">|&gt;</span></span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">relocate</span>(Type,<span class="at">.after =</span> Name)</span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a></span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a>codebook<span class="ot">=</span><span class="fu">cbind</span>(codebook,<span class="at">Values_After_Fac2Num=</span>codebook_w_numeric<span class="sc">$</span>Values)</span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a></span>
+<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a>char_array_to_txt <span class="ot">&lt;-</span> <span class="cf">function</span>(char_array) {</span>
+<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a>  concatenated_str_vec<span class="ot">=</span><span class="fu">vector2String</span>(char_array)</span>
+<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">substr</span>(concatenated_str_vec,<span class="dv">3</span>,<span class="fu">nchar</span>(concatenated_str_vec)<span class="sc">-</span><span class="dv">1</span>))</span>
+<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a>}</span>
+<span id="cb18-26"><a href="#cb18-26" tabindex="-1"></a></span>
+<span id="cb18-27"><a href="#cb18-27" tabindex="-1"></a><span class="co">#CREATE A FINAL COLUMN COMBINING THE NUMERIC FACTORS WITH THEIR LEVELS</span></span>
+<span id="cb18-28"><a href="#cb18-28" tabindex="-1"></a>codebook<span class="sc">$</span>Factor_levels<span class="ot">=</span><span class="st">&quot;&quot;</span></span>
+<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a>codebook<span class="sc">$</span>Data_Range<span class="ot">=</span><span class="st">&quot;&quot;</span></span>
+<span id="cb18-30"><a href="#cb18-30" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(codebook)){</span>
+<span id="cb18-31"><a href="#cb18-31" tabindex="-1"></a>  var<span class="ot">=</span>codebook[i,<span class="st">&quot;Name&quot;</span>]</span>
+<span id="cb18-32"><a href="#cb18-32" tabindex="-1"></a>  <span class="cf">if</span>(codebook[i,<span class="st">&quot;Type&quot;</span>]<span class="sc">==</span><span class="st">&quot;factor&quot;</span>) {</span>
+<span id="cb18-33"><a href="#cb18-33" tabindex="-1"></a>  <span class="co">#if(grepl(&quot;factor&quot;,var)) {</span></span>
+<span id="cb18-34"><a href="#cb18-34" tabindex="-1"></a>    fac_levels<span class="ot">=</span><span class="fu">levels</span>(globdata[,var])</span>
+<span id="cb18-35"><a href="#cb18-35" tabindex="-1"></a>    codebook[i,<span class="st">&quot;Factor_levels&quot;</span>]<span class="ot">=</span><span class="fu">char_array_to_txt</span>(fac_levels)</span>
+<span id="cb18-36"><a href="#cb18-36" tabindex="-1"></a>    codebook[i,<span class="st">&quot;Data_Range&quot;</span>]<span class="ot">=</span><span class="fu">paste0</span>(codebook[i,<span class="st">&quot;Values_After_Fac2Num&quot;</span>],<span class="st">&quot;, corresponding to: &quot;</span>,codebook[i,<span class="st">&quot;Factor_levels&quot;</span>])</span>
+<span id="cb18-37"><a href="#cb18-37" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb18-38"><a href="#cb18-38" tabindex="-1"></a>    codebook[i,<span class="st">&quot;Data_Range&quot;</span>]<span class="ot">=</span>codebook[i,<span class="st">&quot;Orig_Values&quot;</span>]</span>
+<span id="cb18-39"><a href="#cb18-39" tabindex="-1"></a>  }</span>
+<span id="cb18-40"><a href="#cb18-40" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div id="character-variables" class="section level1">
 <h1>Character variables</h1>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>character_vars_wo_description<span class="ot">=</span>codebook <span class="sc">|&gt;</span></span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(Type<span class="sc">==</span><span class="st">&quot;character&quot;</span>, Data_Range<span class="sc">==</span><span class="st">&quot;&quot;</span>) <span class="sc">|&gt;</span></span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Name,Data_Range)</span>
-<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="cf">for</span>(var <span class="cf">in</span> character_vars_wo_description<span class="sc">$</span>Name){</span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>  var_cats<span class="ot">=</span><span class="fu">names</span>(<span class="fu">table</span>(mdta[,var]))</span>
-<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>  codebook[codebook<span class="sc">$</span>Name<span class="sc">==</span>var,<span class="st">&quot;Data_Range&quot;</span>]<span class="ot">=</span> <span class="fu">paste</span>(var_cats,<span class="at">collapse =</span> <span class="st">&quot;, &quot;</span>)  </span>
-<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>character_vars_wo_description<span class="ot">=</span>codebook <span class="sc">|&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(Type<span class="sc">==</span><span class="st">&quot;character&quot;</span>, Data_Range<span class="sc">==</span><span class="st">&quot;&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Name,Data_Range)</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="cf">for</span>(var <span class="cf">in</span> character_vars_wo_description<span class="sc">$</span>Name){</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a>  var_cats<span class="ot">=</span><span class="fu">names</span>(<span class="fu">table</span>(mdta[,var]))</span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a>  codebook[codebook<span class="sc">$</span>Name<span class="sc">==</span>var,<span class="st">&quot;Data_Range&quot;</span>]<span class="ot">=</span> <span class="fu">paste</span>(var_cats,<span class="at">collapse =</span> <span class="st">&quot;, &quot;</span>)  </span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div id="use-value-labels-if-there-is-a-factor-version" class="section level1">
 <h1>Use value labels if there is a factor version</h1>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>codebook<span class="sc">$</span>factor_equivalent</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>codebook<span class="sc">$</span>factor_equivalent</span></code></pre></div>
 <pre><code>## NULL</code></pre>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="cf">for</span>(var <span class="cf">in</span> codebook<span class="sc">$</span>Name){</span>
-<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>  factor_name<span class="ot">=</span><span class="fu">paste0</span>(var,<span class="st">&quot;.factor&quot;</span>)</span>
-<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>  codebook[codebook<span class="sc">$</span>Name<span class="sc">==</span>var,<span class="st">&quot;factor_equivalent&quot;</span>]<span class="ot">=</span><span class="fu">ifelse</span>(factor_name <span class="sc">%in%</span> <span class="fu">names</span>(mdta),factor_name,<span class="cn">NA</span>)</span>
-<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a>}</span>
-<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a></span>
-<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a>codebook<span class="sc">$</span>factor_equivalent_levels<span class="ot">=</span><span class="st">&quot;&quot;</span></span>
-<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(codebook)){</span>
-<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a>  <span class="cf">if</span>(codebook[i,<span class="st">&quot;Type&quot;</span>] <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;numeric&quot;</span>,<span class="st">&quot;integer&quot;</span>) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(codebook[i,<span class="st">&quot;factor_equivalent&quot;</span>])){</span>
-<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a>    var_factor_equivalent<span class="ot">=</span>codebook[i,<span class="st">&quot;factor_equivalent&quot;</span>]</span>
-<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a>    fac_levels<span class="ot">=</span><span class="fu">levels</span>(mdta[,var_factor_equivalent])</span>
-<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a>    codebook[i,<span class="st">&quot;factor_equivalent_levels&quot;</span>]<span class="ot">=</span><span class="fu">char_array_to_txt</span>(fac_levels)</span>
-<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a>    codebook[i,<span class="st">&quot;Data_Range&quot;</span>]<span class="ot">=</span><span class="fu">paste0</span>(codebook[i,<span class="st">&quot;Data_Range&quot;</span>],</span>
-<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a>                                          <span class="st">&quot;, corresponding to: &quot;</span>, codebook[i,<span class="st">&quot;factor_equivalent_levels&quot;</span>])</span>
-<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a>  }</span>
-<span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="cf">for</span>(var <span class="cf">in</span> codebook<span class="sc">$</span>Name){</span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a>  factor_name<span class="ot">=</span><span class="fu">paste0</span>(var,<span class="st">&quot;.factor&quot;</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a>  codebook[codebook<span class="sc">$</span>Name<span class="sc">==</span>var,<span class="st">&quot;factor_equivalent&quot;</span>]<span class="ot">=</span><span class="fu">ifelse</span>(factor_name <span class="sc">%in%</span> <span class="fu">names</span>(mdta),factor_name,<span class="cn">NA</span>)</span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a>}</span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a>codebook<span class="sc">$</span>factor_equivalent_levels<span class="ot">=</span><span class="st">&quot;&quot;</span></span>
+<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(codebook)){</span>
+<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a>  <span class="cf">if</span>(codebook[i,<span class="st">&quot;Type&quot;</span>] <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;numeric&quot;</span>,<span class="st">&quot;integer&quot;</span>) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(codebook[i,<span class="st">&quot;factor_equivalent&quot;</span>])){</span>
+<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a>    var_factor_equivalent<span class="ot">=</span>codebook[i,<span class="st">&quot;factor_equivalent&quot;</span>]</span>
+<span id="cb22-10"><a href="#cb22-10" tabindex="-1"></a>    fac_levels<span class="ot">=</span><span class="fu">levels</span>(mdta[,var_factor_equivalent])</span>
+<span id="cb22-11"><a href="#cb22-11" tabindex="-1"></a>    codebook[i,<span class="st">&quot;factor_equivalent_levels&quot;</span>]<span class="ot">=</span><span class="fu">char_array_to_txt</span>(fac_levels)</span>
+<span id="cb22-12"><a href="#cb22-12" tabindex="-1"></a>    codebook[i,<span class="st">&quot;Data_Range&quot;</span>]<span class="ot">=</span><span class="fu">paste0</span>(codebook[i,<span class="st">&quot;Data_Range&quot;</span>],</span>
+<span id="cb22-13"><a href="#cb22-13" tabindex="-1"></a>                                          <span class="st">&quot;, corresponding to: &quot;</span>, codebook[i,<span class="st">&quot;factor_equivalent_levels&quot;</span>])</span>
+<span id="cb22-14"><a href="#cb22-14" tabindex="-1"></a>  }</span>
+<span id="cb22-15"><a href="#cb22-15" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div id="manual-fixes-in-google-sheets" class="section level1">
 <h1>Manual fixes in Google Sheets</h1>
 </div>
 <div id="clean-up-before-exprot" class="section level1">
 <h1>Clean up before exprot</h1>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co"># THE ROW ORDER HAS GOTTEN SCREWY. RESTORE IT AND ONLY SAVE COLUMNS NEEEDED</span></span>
-<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>codebook<span class="sc">$</span>row_num<span class="ot">=</span><span class="fu">row.names</span>(codebook)</span>
-<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a></span>
-<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="co"># REMOVE THIS Â, &quot;A&quot; WITH A CARROT</span></span>
-<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>codebook <span class="ot">=</span> codebook <span class="sc">|&gt;</span></span>
-<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">Label=</span><span class="fu">str_replace</span>(Label,<span class="st">&quot;Â&quot;</span>,<span class="st">&quot;&quot;</span>) )</span>
-<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a></span>
-<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="co">#JUST THE 4 COLUMNS. CLEAN UP THE NAMES? VARIABLE, TYPE, SURVEY ITEM, DATA INFORMATION</span></span>
-<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a>codebook<span class="ot">=</span>codebook <span class="sc">|&gt;</span></span>
-<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Name,Type,Label,Data_Range) <span class="sc">|&gt;</span></span>
-<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&#39;Variable Name&#39;</span><span class="ot">=</span>Name,<span class="st">&#39;Data Type&#39;</span><span class="ot">=</span>Type,<span class="st">&#39;Survey Question/Item&#39;</span><span class="ot">=</span>Label,</span>
-<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a>                <span class="st">&#39;Variable Description&#39;</span><span class="ot">=</span>Data_Range) </span>
-<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a></span>
-<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a><span class="co"># CHANGE LABELS FOR DATA TYPE</span></span>
-<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a>codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span>[codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span><span class="sc">==</span><span class="st">&quot;Character&quot;</span>]<span class="ot">=</span><span class="st">&quot;Character Field&quot;</span></span>
-<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a>codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span>[codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span><span class="sc">==</span><span class="st">&quot;character&quot;</span>]<span class="ot">=</span><span class="st">&quot;Character Field&quot;</span></span>
-<span id="cb21-17"><a href="#cb21-17" tabindex="-1"></a>codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span>[codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span><span class="sc">==</span><span class="st">&quot;factor&quot;</span>]<span class="ot">=</span><span class="st">&quot;Coded Category&quot;</span></span>
-<span id="cb21-18"><a href="#cb21-18" tabindex="-1"></a>codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span>[codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span><span class="sc">==</span><span class="st">&quot;numeric&quot;</span>]<span class="ot">=</span><span class="st">&quot;Continuous Numeric&quot;</span></span>
-<span id="cb21-19"><a href="#cb21-19" tabindex="-1"></a>codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span>[codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span><span class="sc">==</span><span class="st">&quot;integer&quot;</span>]<span class="ot">=</span><span class="st">&quot;Integer Numeric&quot;</span></span></code></pre></div>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a>caryl_fixes <span class="ot">&lt;-</span> <span class="fu">read_sheet</span>(google_sheet_of_main_manual_fixes,<span class="at">sheet=</span>sheet_tab_of_manual_fixes)</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="co"># THE ROW ORDER HAS GOTTEN SCREWY. RESTORE IT AND ONLY SAVE COLUMNS NEEEDED</span></span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>codebook<span class="sc">$</span>row_num<span class="ot">=</span><span class="fu">row.names</span>(codebook)</span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a><span class="co"># REMOVE THIS Â, &quot;A&quot; WITH A CARROT</span></span>
+<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a>codebook <span class="ot">=</span> codebook <span class="sc">|&gt;</span></span>
+<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">Label=</span><span class="fu">str_replace</span>(Label,<span class="st">&quot;Â&quot;</span>,<span class="st">&quot;&quot;</span>) )</span>
+<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a><span class="co">#JUST THE 4 COLUMNS. CLEAN UP THE NAMES? VARIABLE, TYPE, SURVEY ITEM, DATA INFORMATION</span></span>
+<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a>codebook<span class="ot">=</span>codebook <span class="sc">|&gt;</span></span>
+<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(Name,Type,Label,Data_Range) <span class="sc">|&gt;</span></span>
+<span id="cb23-11"><a href="#cb23-11" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&#39;Variable Name&#39;</span><span class="ot">=</span>Name,<span class="st">&#39;Data Type&#39;</span><span class="ot">=</span>Type,<span class="st">&#39;Survey Question/Item&#39;</span><span class="ot">=</span>Label,</span>
+<span id="cb23-12"><a href="#cb23-12" tabindex="-1"></a>                <span class="st">&#39;Variable Description&#39;</span><span class="ot">=</span>Data_Range) </span>
+<span id="cb23-13"><a href="#cb23-13" tabindex="-1"></a></span>
+<span id="cb23-14"><a href="#cb23-14" tabindex="-1"></a><span class="co"># CHANGE LABELS FOR DATA TYPE</span></span>
+<span id="cb23-15"><a href="#cb23-15" tabindex="-1"></a>codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span>[codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span><span class="sc">==</span><span class="st">&quot;Character&quot;</span>]<span class="ot">=</span><span class="st">&quot;Character Field&quot;</span></span>
+<span id="cb23-16"><a href="#cb23-16" tabindex="-1"></a>codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span>[codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span><span class="sc">==</span><span class="st">&quot;character&quot;</span>]<span class="ot">=</span><span class="st">&quot;Character Field&quot;</span></span>
+<span id="cb23-17"><a href="#cb23-17" tabindex="-1"></a>codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span>[codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span><span class="sc">==</span><span class="st">&quot;factor&quot;</span>]<span class="ot">=</span><span class="st">&quot;Coded Category&quot;</span></span>
+<span id="cb23-18"><a href="#cb23-18" tabindex="-1"></a>codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span>[codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span><span class="sc">==</span><span class="st">&quot;numeric&quot;</span>]<span class="ot">=</span><span class="st">&quot;Continuous Numeric&quot;</span></span>
+<span id="cb23-19"><a href="#cb23-19" tabindex="-1"></a>codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span>[codebook<span class="sc">$</span><span class="st">`</span><span class="at">Data Type</span><span class="st">`</span><span class="sc">==</span><span class="st">&quot;integer&quot;</span>]<span class="ot">=</span><span class="st">&quot;Integer Numeric&quot;</span></span></code></pre></div>
+</div>
+<div id="incorporate-caryls-codebook" class="section level1">
+<h1>Incorporate Caryl’s codebook</h1>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a>caryl_fixes <span class="ot">&lt;-</span> <span class="fu">read_sheet</span>(google_sheet_of_main_manual_fixes,<span class="at">sheet=</span>sheet_tab_of_manual_fixes)</span></code></pre></div>
 <pre><code>## ✔ Reading from &quot;Changes needed to LFF quant data to Global&quot;.</code></pre>
 <pre><code>## ✔ Range &#39;&#39;Manual_Fixes&#39;&#39;.</code></pre>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>codebook_and_caryl<span class="ot">=</span>dplyr<span class="sc">::</span><span class="fu">left_join</span>(codebook,caryl_fixes,<span class="at">by=</span><span class="fu">c</span>(<span class="st">&quot;Variable Name&quot;</span><span class="ot">=</span><span class="st">&quot;Variable_Name&quot;</span>))</span>
-<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a><span class="fu">write.csv</span>(codebook_and_caryl,<span class="at">file=</span><span class="fu">paste0</span>(<span class="fu">substr</span>(codebook_output_path,<span class="dv">1</span>,<span class="fu">nchar</span>(codebook_output_path)<span class="sc">-</span><span class="dv">4</span>),<span class="st">&quot;_and_caryl_main_fixes&quot;</span>,<span class="st">&quot;.csv&quot;</span>)  ,<span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a>codebook_and_caryl<span class="ot">=</span>dplyr<span class="sc">::</span><span class="fu">left_join</span>(codebook,caryl_fixes,<span class="at">by=</span><span class="fu">c</span>(<span class="st">&quot;Variable Name&quot;</span><span class="ot">=</span><span class="st">&quot;Variable_Name&quot;</span>))</span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a><span class="fu">write.csv</span>(codebook_and_caryl,<span class="at">file=</span><span class="fu">paste0</span>(<span class="fu">substr</span>(codebook_output_path,<span class="dv">1</span>,<span class="fu">nchar</span>(codebook_output_path)<span class="sc">-</span><span class="dv">4</span>),<span class="st">&quot;_and_caryl_main_fixes&quot;</span>,<span class="st">&quot;.csv&quot;</span>)  ,<span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 </div>
 <div id="output-data-and-codebook" class="section level1">
 <h1>Output data and codebook</h1>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="fu">write.csv</span>(globdata_w_factor_as_numeric,<span class="at">file=</span>csv_data_output_path, <span class="at">row.names=</span>F, <span class="at">na=</span><span class="st">&quot;&quot;</span>)</span>
-<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a><span class="fu">write.csv</span>(codebook, <span class="at">file=</span>codebook_output_path, <span class="at">row.names=</span>F)</span>
-<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a><span class="co">#BECAUSE WE HAVE VARIABLES WITH &quot;.&quot; IN THE NAMES, CAN&#39;T WRITE AS .dta</span></span>
-<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a><span class="co">#haven::write_dta(globdata, path=paste0(substr(codebook_output_path,1,nchar(codebook_output_path)-3),&quot;dta&quot;))</span></span>
-<span id="cb26-5"><a href="#cb26-5" tabindex="-1"></a><span class="fu">saveRDS</span>(globdata, <span class="at">file=</span><span class="fu">paste0</span>(<span class="fu">substr</span>(codebook_output_path,<span class="dv">1</span>,<span class="fu">nchar</span>(codebook_output_path)<span class="sc">-</span><span class="dv">3</span>),<span class="st">&quot;rds&quot;</span>))</span>
-<span id="cb26-6"><a href="#cb26-6" tabindex="-1"></a>haven<span class="sc">::</span><span class="fu">write_sav</span>(globdata, <span class="at">path=</span><span class="fu">paste0</span>(<span class="fu">substr</span>(codebook_output_path,<span class="dv">1</span>,<span class="fu">nchar</span>(codebook_output_path)<span class="sc">-</span><span class="dv">3</span>),<span class="st">&quot;sav&quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="fu">write.csv</span>(globdata_w_factor_as_numeric,<span class="at">file=</span>csv_data_output_path, <span class="at">row.names=</span>F, <span class="at">na=</span><span class="st">&quot;&quot;</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a><span class="fu">write.csv</span>(codebook, <span class="at">file=</span>codebook_output_path, <span class="at">row.names=</span>F)</span>
+<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a><span class="co">#BECAUSE WE HAVE VARIABLES WITH &quot;.&quot; IN THE NAMES, CAN&#39;T WRITE AS .dta</span></span>
+<span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a><span class="co">#haven::write_dta(globdata, path=paste0(substr(codebook_output_path,1,nchar(codebook_output_path)-3),&quot;dta&quot;))</span></span>
+<span id="cb28-5"><a href="#cb28-5" tabindex="-1"></a><span class="fu">saveRDS</span>(globdata, <span class="at">file=</span><span class="fu">paste0</span>(<span class="fu">substr</span>(csv_data_output_path,<span class="dv">1</span>,<span class="fu">nchar</span>(csv_data_output_path)<span class="sc">-</span><span class="dv">3</span>),<span class="st">&quot;rds&quot;</span>))</span>
+<span id="cb28-6"><a href="#cb28-6" tabindex="-1"></a>haven<span class="sc">::</span><span class="fu">write_sav</span>(globdata, <span class="at">path=</span><span class="fu">paste0</span>(<span class="fu">substr</span>(csv_data_output_path,<span class="dv">1</span>,<span class="fu">nchar</span>(csv_data_output_path)<span class="sc">-</span><span class="dv">3</span>),<span class="st">&quot;sav&quot;</span>))</span></code></pre></div>
 </div>
 </div>
 
