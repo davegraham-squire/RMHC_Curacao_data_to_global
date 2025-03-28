@@ -49,15 +49,68 @@ pacman::p_load(tidyr,vtable,rio,readxl,writexl, sjlabelled,Hmisc,viscomplexr,lar
 ```
 
 
-## Load data
+## Load data, create any new vars needed
 
 ```{r data_prep}
-# MIKE'S CODE TO CREATE DB FOR GLOBAL
-# THANKS MIKE!
 
 # data
 mdta <- readRDS(curacao_raw_data_path)
 
+#CREATE CHILD AGE CATEGORIES
+child_age_levels=c("7 days or less","8-14 days","15-27 days","28-60 days","61-90 days",
+                   "91-121 days","121-180 days","181 or more days")
+mdta <- mdta %>%
+  dplyr::mutate(
+    en_child_age_days_cat = dplyr::case_when(
+      en_childage_d < 8 ~ "7 days or less",
+      en_childage_d >= 8 & en_childage_d < 15 ~ "8-14 days",
+      en_childage_d >= 15 & en_childage_d < 28 ~ "15-27 days",
+      en_childage_d >= 28 & en_childage_d < 61 ~ "28-60 days",
+      en_childage_d >= 61 & en_childage_d < 91 ~ "61-90 days",
+      en_childage_d >= 91 & en_childage_d < 121 ~ "91-121 days",
+      en_childage_d >= 121 & en_childage_d < 181 ~ "121-180 days",
+      en_childage_d >= 181  ~ "181 or more days"
+    )
+  ) %>%
+  dplyr::mutate(en_child_age_days_cat = factor(en_child_age_days_cat, 
+                                               levels = child_age_levels)) 
+# AT DISCHARGE
+mdta <- mdta %>%
+  dplyr::mutate(
+    dc_child_age_days_cat = dplyr::case_when(
+      dc_childage_d < 8 ~ "7 days or less",
+      dc_childage_d >= 8 & dc_childage_d < 15 ~ "8-14 days",
+      dc_childage_d >= 15 & dc_childage_d < 28 ~ "15-27 days",
+      dc_childage_d >= 28 & dc_childage_d < 61 ~ "28-60 days",
+      dc_childage_d >= 61 & dc_childage_d < 91 ~ "61-90 days",
+      dc_childage_d >= 91 & dc_childage_d < 121 ~ "91-121 days",
+      dc_childage_d >= 121 & dc_childage_d < 181 ~ "121-180 days",
+      dc_childage_d >= 181  ~ "181 or more days"
+    )
+  ) %>%
+  dplyr::mutate(dc_child_age_days_cat = factor(dc_child_age_days_cat, 
+                                               levels = child_age_levels)) 
+# AT POST-DISCHARGE
+mdta <- mdta %>%
+  dplyr::mutate(
+    pd_child_age_days_cat = dplyr::case_when(
+      pd_childage_d < 8 ~ "7 days or less",
+      pd_childage_d >= 8 & pd_childage_d < 15 ~ "8-14 days",
+      pd_childage_d >= 15 & pd_childage_d < 28 ~ "15-27 days",
+      pd_childage_d >= 28 & pd_childage_d < 61 ~ "28-60 days",
+      pd_childage_d >= 61 & pd_childage_d < 91 ~ "61-90 days",
+      pd_childage_d >= 91 & pd_childage_d < 121 ~ "91-121 days",
+      pd_childage_d >= 121 & pd_childage_d < 181 ~ "121-180 days",
+      pd_childage_d >= 181  ~ "181 or more days"
+    )
+  ) %>%
+  dplyr::mutate(pd_child_age_days_cat = factor(pd_child_age_days_cat, 
+                                               levels = child_age_levels))
+```
+
+```{r export_global_vars}
+# MIKE'S CODE TO CREATE DB FOR GLOBAL
+# THANKS MIKE!
 # Variables to send to Global: only the s1 vars listed. have to check for s2 & s3
 # globalvars <- import(vars_to_send_to_global)
 # gvars <- globalvars$variable
@@ -108,21 +161,6 @@ before= globdata |>
   spread(en_survlang.factor,n)
 print(n=15,before)
 
-# for (var in c("en_survlang.factor","dc_survlang.factor","pd_survlang.factor")) {
-#   for (house in unique(globdata$site)) {
-#     few_speakers = globdata |>
-#       dplyr::filter(site==house) |>
-#       dplyr::group_by(!!rlang::sym(var)) |>
-#       dplyr::tally() |>
-#       dplyr::filter(n<=6) |>
-#       dplyr::select(-n)
-# 
-# langs_to_code_as_other=as.character(few_speakers)
-# 
-# globdata[globdata$site==house & globdata[,var] %in% langs_to_code_as_other,var]="ot"
-#   }
-# }
-
 globdata = globdata |>
   dplyr::mutate(en_survlang.factor = fct_recode(en_survlang.factor,"Other"="Español"),
          dc_survlang.factor = fct_recode(dc_survlang.factor,"Other"="Español"),
@@ -138,6 +176,59 @@ after= globdata |>
   dplyr::tally() |>
   spread(en_survlang.factor,n)
 print(n=15,after)
+```
+
+```{r define_childage_in_days_cat, eval=FALSE}
+
+child_age_levels=c("7 days or less","8-14 days","15-27 days","28-60 days","61-90 days",
+                   "91-121 days","121-180 days","181 or more days")
+globdata <- globdata %>%
+  dplyr::mutate(
+    en_child_age_days_cat = dplyr::case_when(
+      en_childage_d < 8 ~ "7 days or less",
+      en_childage_d >= 8 & en_childage_d < 15 ~ "8-14 days",
+      en_childage_d >= 15 & en_childage_d < 28 ~ "15-27 days",
+      en_childage_d >= 28 & en_childage_d < 61 ~ "28-60 days",
+      en_childage_d >= 61 & en_childage_d < 91 ~ "61-90 days",
+      en_childage_d >= 91 & en_childage_d < 121 ~ "91-121 days",
+      en_childage_d >= 121 & en_childage_d < 181 ~ "121-180 days",
+      en_childage_d >= 181  ~ "181 or more days"
+    )
+  ) %>%
+  dplyr::mutate(en_child_age_days_cat = factor(en_child_age_days_cat, 
+                                               levels = child_age_levels)) 
+# AT DISCHARGE
+globdata <- globdata %>%
+  dplyr::mutate(
+    dc_child_age_days_cat = dplyr::case_when(
+      dc_childage_d < 8 ~ "7 days or less",
+      dc_childage_d >= 8 & dc_childage_d < 15 ~ "8-14 days",
+      dc_childage_d >= 15 & dc_childage_d < 28 ~ "15-27 days",
+      dc_childage_d >= 28 & dc_childage_d < 61 ~ "28-60 days",
+      dc_childage_d >= 61 & dc_childage_d < 91 ~ "61-90 days",
+      dc_childage_d >= 91 & dc_childage_d < 121 ~ "91-121 days",
+      dc_childage_d >= 121 & dc_childage_d < 181 ~ "121-180 days",
+      dc_childage_d >= 181  ~ "181 or more days"
+    )
+  ) %>%
+  dplyr::mutate(dc_child_age_days_cat = factor(dc_child_age_days_cat, 
+                                               levels = child_age_levels)) 
+# AT POST-DISCHARGE
+globdata <- globdata %>%
+  dplyr::mutate(
+    pd_child_age_days_cat = dplyr::case_when(
+      pd_childage_d < 8 ~ "7 days or less",
+      pd_childage_d >= 8 & pd_childage_d < 15 ~ "8-14 days",
+      pd_childage_d >= 15 & pd_childage_d < 28 ~ "15-27 days",
+      pd_childage_d >= 28 & pd_childage_d < 61 ~ "28-60 days",
+      pd_childage_d >= 61 & pd_childage_d < 91 ~ "61-90 days",
+      pd_childage_d >= 91 & pd_childage_d < 121 ~ "91-121 days",
+      pd_childage_d >= 121 & pd_childage_d < 181 ~ "121-180 days",
+      pd_childage_d >= 181  ~ "181 or more days"
+    )
+  ) %>%
+  dplyr::mutate(pd_child_age_days_cat = factor(pd_child_age_days_cat, 
+                                               levels = child_age_levels)) 
 ```
 
 
