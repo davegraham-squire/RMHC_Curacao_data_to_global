@@ -35,7 +35,7 @@ rm(list=ls())
 curacao_raw_data_path="//ars-data-01.sde.net.ucsf.edu/MyResearchShared/LFranck_shared/RMHC/Data/R data for Dave/Curacao/mdta_02_v2024-10-01.rds"
 #curacao_raw_data_path="C:/ucsf/mdta_02_v2024-10-01.rds"
 skeleton_file_w_variable_labels="char_child_par_fix_v10.xlsx"
-vars_to_send_to_global="Variables to include in global and site reports_Curacao_20250321.xlsx"
+vars_to_send_to_global="Variables to include in global and site reports_Curacao_20250327.xlsx"
 google_sheet_of_manual_fixes="https://docs.google.com/spreadsheets/d/1hZbY7s4rgeUhK36COWRj0qd6yXuUkonGrk_OReMRHGY/edit?gid=0#gid=0"
 google_sheet_of_main_manual_fixes="https://docs.google.com/spreadsheets/d/18Sl4ki7Sw7MB1rWnB1ZDFooTT99HAfyPKhHVHAyoJV0/edit?gid=1329229673#gid=1329229673"
 sheet_tab_of_manual_fixes="Manual_Fixes"
@@ -73,7 +73,10 @@ mdta <- mdta %>%
     )
   ) %>%
   dplyr::mutate(en_child_age_days_cat = factor(en_child_age_days_cat, 
-                                               levels = child_age_levels)) 
+                                               levels = child_age_levels))
+
+Hmisc::label(mdta$en_child_age_days_cat) <- "Age of hospitalized child in days (categorized)"
+
 # AT DISCHARGE
 mdta <- mdta %>%
   dplyr::mutate(
@@ -90,6 +93,8 @@ mdta <- mdta %>%
   ) %>%
   dplyr::mutate(dc_child_age_days_cat = factor(dc_child_age_days_cat, 
                                                levels = child_age_levels)) 
+Hmisc::label(mdta$dc_child_age_days_cat) <- "Age of hospitalized child in days (categorized)"
+
 # AT POST-DISCHARGE
 mdta <- mdta %>%
   dplyr::mutate(
@@ -106,6 +111,7 @@ mdta <- mdta %>%
   ) %>%
   dplyr::mutate(pd_child_age_days_cat = factor(pd_child_age_days_cat, 
                                                levels = child_age_levels))
+Hmisc::label(mdta$pd_child_age_days_cat) <- "Age of hospitalized child in days (categorized)"
 ```
 
 ```{r export_global_vars}
